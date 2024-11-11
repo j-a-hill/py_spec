@@ -15,7 +15,7 @@ from scipy.optimize import curve_fit
 def curve_func(x, a, b, c):
     return a * np.exp(-b * x) + c
 
-data = pd.read_csv("/home/jake/Desktop/Python_spec/pyspec.csv", index_col=0)
+data = pd.read_csv("C:/Users/jake_/Desktop/Python_spec/pyspec.csv", index_col=0)
 print(data)
 
 # Strip units and convert to float

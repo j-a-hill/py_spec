@@ -15,18 +15,27 @@ parser.add_argument('-i', '--input', help="Path to the input files (use wildcard
 parser.add_argument('-b', '--background', help="Path to the background spectrum file for subtraction", type=str)
 parser.add_argument('-H', '--header', help="Number of header lines in the file", type=int, default=0)
 parser.add_argument('-f', '--footer', help="Number of footer lines in the file", type=int, default=0)
-parser.add_argument('-o', '--output', help="Path to save the processed output file", type=str, default="pyspec.csv")
+parser.add_argument('-o', '--output', help="Name of the output directory", type=str)
 parser.add_argument('-t', '--time', help='Time for each spectra in S', type=float)
 parser.add_argument('--baseline', '-bl', help="Enable baseline correction", action='store_true')
 parser.add_argument('--smooth', '-sm', help="Enable Savitzky-Golay smoothing", action='store_true')
 parser.add_argument('--wavelengths', '-w', help="List of wavelengths to plot over time", type=int, nargs='+')
-parser.add_argument('--Spectra_time', '-st', help="Plot every nth spectrum over time", type=int, default=10)
+parser.add_argument('--Spectra_time', '-st', help="Plot every nth spectrum over time", type=int, default=None)
 
 args = parser.parse_args()
 
 if args.time is None:
     print("Warning: No time interval specified. Defaulting to 0.1s per spectrum.")
     args.time = 0.1  # Default to 0.1 seconds
+
+# Set the default output directory name based on the input argument
+if args.output is None:
+    input_base_name = os.path.basename(args.input[0])
+    args.output = f"{input_base_name}_pyspec"
+
+# Create output directory if it doesn't exist
+if not os.path.exists(args.output):
+    os.makedirs(args.output)
 
 # Expand wildcard paths into actual file paths
 file_paths = [file for input_path in args.input for file in glob.glob(input_path)]
@@ -56,8 +65,9 @@ else:
 # Calculate the average across replicates (time columns) by grouping by 'Wavelength'
 if not combined_df.empty:
     mean_df = combined_df.groupby('Wavelength').mean()
-    mean_df.to_csv(args.output.replace('.csv', '_mean.csv'))
-    print("Mean data calculated and saved.")
+    mean_output_path = os.path.join(args.output, "mean_pyspec.csv")
+    mean_df.to_csv(mean_output_path)
+    print(f"Mean data calculated and saved to {mean_output_path}.")
 else:
     mean_df = pd.DataFrame()
     print("No mean data calculated due to empty combined DataFrame.")
@@ -65,8 +75,9 @@ else:
 # Background subtraction, if applicable
 if args.background and not mean_df.empty:
     print("Performing background subtraction...")
-    mean_df = subtract_background_and_save(mean_df, args.background, output_file=f"background_subtracted_{args.output}")
-    mean_df.to_csv(args.output.replace('.csv', '_background_subtracted.csv'))
+    background_subtracted_path = os.path.join(args.output, "background_subtracted_pyspec.csv")
+    mean_df = subtract_background_and_save(mean_df, args.background, output_file=background_subtracted_path)
+    mean_df.to_csv(background_subtracted_path)
 
 # Extract wavelengths from the first column of mean_df
 if not mean_df.empty:
@@ -75,14 +86,16 @@ if not mean_df.empty:
 # Apply baseline correction if enabled
 if args.baseline and not mean_df.empty:
     print("Applying baseline correction...")
+    baseline_corrected_path = os.path.join(args.output, "baseline_corrected_pyspec.csv")
     mean_df = apply_baseline_correction(mean_df, wavelengths)
-    mean_df.to_csv(args.output.replace('.csv', '_baseline_corrected.csv'))
+    mean_df.to_csv(baseline_corrected_path)
 
 # Apply smoothing if enabled
 if args.smooth and not mean_df.empty:
     print("Applying smoothing...")
+    smoothed_path = os.path.join(args.output, "smoothed_pyspec.csv")
     mean_df = apply_smoothing(mean_df, wavelengths)
-    mean_df.to_csv(args.output.replace('.csv', '_smoothed.csv'))
+    mean_df.to_csv(smoothed_path)
 
 # Plot specified wavelengths over time if enabled
 if args.wavelengths and not mean_df.empty:
@@ -90,13 +103,14 @@ if args.wavelengths and not mean_df.empty:
     plot_wavelengths_over_time(mean_df, wavelengths, args.wavelengths)
 
 # Plot spectra over time if enabled
-if args.Spectra_time and not mean_df.empty:
+if args.Spectra_time is not None and not mean_df.empty:
     print("Plotting spectra over time...")
-    plot_spectra_over_time(mean_df, wavelengths, n=args.Spectra_time)
+    plot_spectra_over_time(mean_df, wavelengths, interval=args.Spectra_time)
 
 # Save the final processed data
 if not mean_df.empty:
-    mean_df.to_csv(args.output)
-    print(f"Processed data saved to {args.output}")
+    final_output_path = os.path.join(args.output, "final_pyspec.csv")
+    mean_df.to_csv(final_output_path)
+    print(f"Processed data saved to {final_output_path}")
 else:
     print("No data saved due to empty DataFrame.")
