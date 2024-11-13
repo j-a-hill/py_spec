@@ -29,3 +29,7 @@ Arguments and defaults:
 -w  --wavelengths, List of wavelengths to plot over time
 
 -st --Spectra_time, Plot every nth spectrum over time, default=10
+
+## Analysis/fitting can be done with spec_analysis.py and spec_time_analysis.py 
+
+These don't have any fancy options but most parameters are obvious in the code
