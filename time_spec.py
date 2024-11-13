@@ -2,7 +2,7 @@
 import os
 import matplotlib.pyplot as plt
 
-def plot_spectra_over_time(data, wavelengths, n=args.Spectra_time, output_dir="spectra_time"):
+def plot_spectra_over_time(data, wavelengths, n, output_dir="spectra_time"):
     """
     Plot every nth spectrum on the same axis to show changes over time.
 
@@ -21,7 +21,7 @@ def plot_spectra_over_time(data, wavelengths, n=args.Spectra_time, output_dir="s
 
     plt.xlabel('Wavelength')
     plt.ylabel('Absorbance')
-    plt.title('')
+    plt.title('Spectra Over Time')
     plt.legend()
     plot_filename = f"{output_dir}/spectra_time.png"
     plt.savefig(plot_filename)
