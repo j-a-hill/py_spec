@@ -105,7 +105,7 @@ if args.wavelengths and not mean_df.empty:
 # Plot spectra over time if enabled
 if args.Spectra_time and not mean_df.empty:
     print("Plotting spectra over time...")
-    plot_spectra_over_time(mean_df, wavelengths, interval=args.Spectra_time)
+    plot_spectra_over_time(mean_df, wavelengths, n=args.Spectra_time)
 
 # Save the final processed data
 if not mean_df.empty:
