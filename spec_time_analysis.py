@@ -3,6 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from lmfit.models import StepModel, LinearModel
 
+# Set the backend to 'Agg' for non-interactive plotting
+plt.switch_backend('Agg')
+
 # Load the data
 data = pd.read_csv('C:/Users/jake_/Desktop/Python_spec/pyspec.csv', index_col=0)
 print(data)
@@ -66,6 +69,7 @@ if closest_wavelength in wavelengths:
     plt.title(f'Fit at {closest_wavelength} nm')
     plt.xlabel('Time (s)')
     plt.ylabel('Absorbance')
-    plt.show()
+    plt.savefig(f'fit_{closest_wavelength}_nm.png')
+    plt.close()
 else:
     print(f'Wavelength {closest_wavelength} not found in the data.')

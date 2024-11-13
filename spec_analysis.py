@@ -3,6 +3,9 @@ import numpy as np
 import pandas as pd
 from lmfit.models import GaussianModel, SplineModel
 
+# Set the backend to 'Agg' for non-interactive plotting
+plt.switch_backend('Agg')
+
 # Load the processed data from spec_main.py
 data = pd.read_csv('C:/Users/jake_/Desktop/Python_spec/pyspec.csv', index_col=0)
 print(data)
@@ -29,8 +32,6 @@ for i, time_point in enumerate(data.columns):
     params = params1 + params2
 
     # Define knot positions for the background spline
-    # Either use a list of positions in np.array([])
-    # Or use np.concatenate(np.arange(start, end, step), np.arange(start, end, step)) to excluded the peak regions
     knot_xvals = np.concatenate((np.arange(180, 250, 20), np.arange(400, 700, 20)))
 
     bkg = SplineModel(prefix='bkg_', xknots=knot_xvals)
@@ -47,8 +48,8 @@ for i, time_point in enumerate(data.columns):
         f.write(f'\nSpectra time_point: {time_point}\n')
         f.write(out.fit_report(min_correl=0.3))
 
-    # Plot the 1st, 10th, and 100th spectrum for checking
-    if i in [0, 10, 100]:
+    # Plot every 100th spectrum for checking
+    if i % 100 == 0:
         plt.figure()
         plt.plot(x, y, label=f'data at {time_point}')
         plt.plot(x, out.best_fit, label='best fit')
@@ -58,4 +59,5 @@ for i, time_point in enumerate(data.columns):
         plt.plot(x, model.eval(params, x=x), label='initial')
         plt.legend()
         plt.title(f'Spectrum at {time_point}')
-        plt.show()
+        plt.savefig(f'spectrum_{time_point}.png')
+        plt.close()
