@@ -1,58 +1,61 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Nov  8 18:24:07 2024
-
-@author: jake
-"""
-
-import numpy as np
-import pandas as pd 
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
+import numpy as np
+import pandas as pd
+from lmfit.models import GaussianModel, SplineModel
 
-# Define a function for the curve fitting
-def curve_func(x, a, b, c):
-    return a * np.exp(-b * x) + c
-
-data = pd.read_csv("C:/Users/jake_/Desktop/Python_spec/pyspec.csv", index_col=0)
+# Load the processed data from spec_main.py
+data = pd.read_csv('C:/Users/jake_/Desktop/Python_spec/pyspec.csv', index_col=0)
 print(data)
 
-# Strip units and convert to float
-Time = data.columns.str.replace('s', '').astype(float)
-wavelengths = data.index.values.astype(float)
+# Loop through each time point and perform the fitting
+for i, time_point in enumerate(data.columns):
+    y = data[time_point].values  # Absorbance values at the current time point
+    x = data.index.values.astype(float)  # Wavelength values
 
-# Specify the wavelengths you want to plot
-selected_wavelengths = [412]  # example wavelengths, change as needed
+    # First Gaussian model
+    model1 = GaussianModel(prefix='peak1_')
+    params1 = model1.make_params(amplitude=dict(value=0.1, min=0, max=0.5),
+                                 center=dict(value=300, min=250, max=350),
+                                 sigma=dict(value=3, min=0))
 
-# Function to find the closest wavelength
-def find_closest_wavelength(selected_wavelength, available_wavelengths):
-    return min(available_wavelengths, key=lambda x: abs(x - selected_wavelength))
+    # Second Gaussian model
+    model2 = GaussianModel(prefix='peak2_')
+    params2 = model2.make_params(amplitude=dict(value=0.1, min=0, max=0.5),
+                                 center=dict(value=350, min=300, max=450),
+                                 sigma=dict(value=3, min=0))
 
-# Find the closest recorded wavelengths
-closest_wavelengths = [find_closest_wavelength(w, wavelengths) for w in selected_wavelengths]
+    # Combine the two Gaussian models
+    model = model1 + model2
+    params = params1 + params2
 
-plt.figure()
+    # Define knot positions for the background spline
+    # Either use a list of positions in np.array([])
+    # Or use np.concatenate(np.arange(start, end, step), np.arange(start, end, step)) to excluded the peak regions
+    knot_xvals = np.concatenate((np.arange(180, 250, 20), np.arange(400, 700, 20)))
 
-# Loop through each selected wavelength and plot
-for wavelength in closest_wavelengths:
-    if wavelength in wavelengths:
-        Absorbance = data.loc[wavelength].values
-        
-        # Scatter plot
-        plt.scatter(Time, Absorbance, label=f'Wavelength {wavelength}')
-        
-        # Fit the curve with initial parameter guesses and increased maxfev
-        initial_guesses = [1, 1e-3, 1]
-        popt, _ = curve_fit(curve_func, Time, Absorbance, p0=initial_guesses, maxfev=10000)
-        fitted_curve = curve_func(Time, *popt)
-        
-        # Plot the fitted curve
-        plt.plot(Time, fitted_curve, label=f'Fitted Curve {wavelength}')
-    else:
-        print(f'Wavelength {wavelength} not found in the data.')
+    bkg = SplineModel(prefix='bkg_', xknots=knot_xvals)
+    params.update(bkg.guess(y, x))
 
-plt.xlabel('Time')
-plt.ylabel('Absorbance')
-plt.legend()
-plt.show()
+    model = model + bkg
+
+    # Fit the model to the data
+    out = model.fit(y, params, x=x)
+    comps = out.eval_components()
+
+    # Write the fit report to a log file
+    with open('fit_report.log', 'a') as f:
+        f.write(f'\nSpectra time_point: {time_point}\n')
+        f.write(out.fit_report(min_correl=0.3))
+
+    # Plot the 1st, 10th, and 100th spectrum for checking
+    if i in [0, 10, 100]:
+        plt.figure()
+        plt.plot(x, y, label=f'data at {time_point}')
+        plt.plot(x, out.best_fit, label='best fit')
+        plt.plot(x, comps['bkg_'], label='background')
+        plt.plot(x, comps['peak1_'], label='peak1')
+        plt.plot(x, comps['peak2_'], label='peak2')
+        plt.plot(x, model.eval(params, x=x), label='initial')
+        plt.legend()
+        plt.title(f'Spectrum at {time_point}')
+        plt.show()
