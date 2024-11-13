@@ -20,7 +20,7 @@ parser.add_argument('-t', '--time', help='Time for each spectra in S', type=floa
 parser.add_argument('--baseline', '-bl', help="Enable baseline correction", action='store_true')
 parser.add_argument('--smooth', '-sm', help="Enable Savitzky-Golay smoothing", action='store_true')
 parser.add_argument('--wavelengths', '-w', help="List of wavelengths to plot over time", type=int, nargs='+')
-parser.add_argument('--Spectra_time', '-st', help="Plot every nth spectrum over time", type=int, default=None)
+parser.add_argument('--Spectra_time', '-st', help="Plot every nth spectrum over time", type=int, default=10)
 
 args = parser.parse_args()
 
@@ -103,7 +103,7 @@ if args.wavelengths and not mean_df.empty:
     plot_wavelengths_over_time(mean_df, wavelengths, args.wavelengths)
 
 # Plot spectra over time if enabled
-if args.Spectra_time is not None and not mean_df.empty:
+if args.Spectra_time and not mean_df.empty:
     print("Plotting spectra over time...")
     plot_spectra_over_time(mean_df, wavelengths, interval=args.Spectra_time)
 

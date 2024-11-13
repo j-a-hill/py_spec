@@ -2,7 +2,7 @@
 import os
 import matplotlib.pyplot as plt
 
-def plot_spectra_over_time(data, wavelengths, n=10, output_dir="spectra_time"):
+def plot_spectra_over_time(data, wavelengths, n=args.Spectra_time, output_dir="spectra_time"):
     """
     Plot every nth spectrum on the same axis to show changes over time.
 
