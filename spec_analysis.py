@@ -1,14 +1,20 @@
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
-from lmfit.models import GaussianModel, SplineModel
+import numpy as np
+import matplotlib.pyplot as plt
+from lmfit.models import GaussianModel, LinearModel
 
 # Set the backend to 'Agg' for non-interactive plotting
-plt.switch_backend('Agg')
+# plt.switch_backend('Agg')
 
 # Load the processed data from spec_main.py
-data = pd.read_csv('C:/Users/jake_/Desktop/Python_spec/pyspec.csv', index_col=0)
+data = pd.read_csv('C:/Users/jake_/Desktop/HGD_nanospec/DTNB_5/hgd_R37S_DTNB_1_5_transmission.asc_pyspec/final_pyspec.csv', index_col=0)
 print(data)
+
+# Filter out wavelengths below 250
+data = data[data.index.astype(float) >= 280]
+
+# Initialize variables to store the fitted parameters
+initial_params = None
 
 # Loop through each time point and perform the fitting
 for i, time_point in enumerate(data.columns):
@@ -17,31 +23,43 @@ for i, time_point in enumerate(data.columns):
 
     # First Gaussian model
     model1 = GaussianModel(prefix='peak1_')
-    params1 = model1.make_params(amplitude=dict(value=0.1, min=0, max=0.5),
-                                 center=dict(value=300, min=250, max=350),
-                                 sigma=dict(value=3, min=0))
-
+    params1 = model1.make_params(amplitude=dict(value=0.2, min=0),
+                                 center=dict(value=330),
+                                 sigma=dict(value=1))
     # Second Gaussian model
     model2 = GaussianModel(prefix='peak2_')
-    params2 = model2.make_params(amplitude=dict(value=0.1, min=0, max=0.5),
-                                 center=dict(value=350, min=300, max=450),
-                                 sigma=dict(value=3, min=0))
+    params2 = model2.make_params(amplitude=dict(value=0.2, min=0),
+                                 center=dict(value=412, min=410, max=420),
+                                 sigma=dict(value=1))
+    # Linear model for baseline
+    model3 = LinearModel(prefix='base_')
+    params3 = model3.make_params(slope=dict(value=0),
+                                 intercept=dict(value=0))
 
-    # Combine the two Gaussian models
-    model = model1 + model2
-    params = params1 + params2
+    model4 = GaussianModel(prefix='peak3_')
+    params4 = model4.make_params(amplitude=dict(value=0.2, min=0),
+                                 center=dict(value=290, min=280, max=300),
+                                 sigma=dict(value=1, min=0.1, max=1.5))
 
-    # Define knot positions for the background spline
-    knot_xvals = np.concatenate((np.arange(180, 250, 20), np.arange(400, 700, 20)))
+    # Combine the models and parameters
+    model = model1 + model2 + model3 + model4
+    params = params1 + params2 + params3 + params4
 
-    bkg = SplineModel(prefix='bkg_', xknots=knot_xvals)
-    params.update(bkg.guess(y, x))
-
-    model = model + bkg
+    if initial_params is not None:
+        # Update parameters with tight constraints except for amplitude
+        for name, param in initial_params.items():
+            if 'amplitude' not in name:
+                params[name].set(value=param.value, min=param.value * 0.95, max=param.value * 1.05)
+            else:
+                params[name].set(value=param.value, min=0)
 
     # Fit the model to the data
-    out = model.fit(y, params, x=x)
+    out = model.fit(y, params, x=x, method='leastsq', max_nfev=10000)
     comps = out.eval_components()
+
+    if initial_params is None:
+        # Store the initial fitted parameters
+        initial_params = out.params
 
     # Write the fit report to a log file
     with open('fit_report.log', 'a') as f:
@@ -49,15 +67,15 @@ for i, time_point in enumerate(data.columns):
         f.write(out.fit_report(min_correl=0.3))
 
     # Plot every 100th spectrum for checking
-    if i % 100 == 0:
+    if i < 1:
         plt.figure()
-        plt.plot(x, y, label=f'data at {time_point}')
-        plt.plot(x, out.best_fit, label='best fit')
-        plt.plot(x, comps['bkg_'], label='background')
+        plt.scatter(x, y, label=f'data at {time_point}', s=5)
+        plt.plot(x, out.best_fit, label='best fit', color='red')
         plt.plot(x, comps['peak1_'], label='peak1')
         plt.plot(x, comps['peak2_'], label='peak2')
-        plt.plot(x, model.eval(params, x=x), label='initial')
+        plt.plot(x, comps['peak3_'], label='peak3')
+        plt.plot(x, comps['base_'], label='baseline')
+        #plt.plot(x, out.init_fit, label='initial fit', linestyle='--')
         plt.legend()
         plt.title(f'Spectrum at {time_point}')
-        plt.savefig(f'spectrum_{time_point}.png')
-        plt.close()
+        plt.show()

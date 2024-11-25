@@ -1,13 +1,13 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from lmfit.models import StepModel, LinearModel
+from lmfit.models import ExponentialModel
 
 # Set the backend to 'Agg' for non-interactive plotting
 plt.switch_backend('Agg')
 
 # Load the data
-data = pd.read_csv('C:/Users/jake_/Desktop/Python_spec/pyspec.csv', index_col=0)
+data = pd.read_csv('C:/Users/jake_/Desktop/HGD_nanospec/DTNB_5/hgd_R37S_DTNB_1_5_transmission.asc_pyspec/final_pyspec.csv', index_col=0)
 print(data)
 
 # Strip units and convert to float
@@ -34,21 +34,18 @@ if closest_wavelength in wavelengths:
     Time = Time[mask]
     Absorbance = Absorbance[mask]
 
-    # Create Step model with S-curve
-    step_mod = StepModel(form='erf', prefix='step_')
-    linear_mod = LinearModel(prefix='line_')
+    # Define weights to reduce the influence of noisy data points
+    weights = np.ones_like(Absorbance)
+    weights[Time < 2] = 0  # Example: Assign lower weights to data points before 2 seconds
 
-    # Combine the models
-    model = step_mod + linear_mod
+    # Create Exponential model
+    exp_mod = ExponentialModel(prefix='exp_')
 
     # Create parameters for the model using guess method
-    params = model.make_params()
-    params.update(step_mod.guess(Absorbance, x=Time, center=2))
-    params['line_slope'].set(value=-0.1, min=0, max=0.1)
-    params['line_intercept'].set(value=Absorbance.mean())
-
-    # Fit the model to the data
-    out = model.fit(Absorbance, params, x=Time)
+    params = exp_mod.make_params(amplitude=0.1, decay=5)
+    print(params)
+    # Fit the model to the data with weights
+    out = exp_mod.fit(Absorbance, params, x=Time, weights=weights)
 
     # Write the fit report to a log file
     with open('time_analysis_fit_report.log', 'a') as f:
@@ -60,16 +57,23 @@ if closest_wavelength in wavelengths:
     plt.plot(Time, out.init_fit, label='Initial fit')
     plt.plot(Time, out.best_fit, label='Best fit')
 
-    # Plot the individual model components
+    # Plot the individual model component
     components = out.eval_components(x=Time)
-    plt.plot(Time, components['step_'], label='Step component')
-    plt.plot(Time, components['line_'], label='Linear component')
+    plt.plot(Time, components['exp_'], label='Exponential component')
 
     plt.legend()
-    plt.title(f'Fit at {closest_wavelength} nm')
+    plt.title(f'Fit for wavelength {closest_wavelength} nm')
     plt.xlabel('Time (s)')
     plt.ylabel('Absorbance')
     plt.savefig(f'fit_{closest_wavelength}_nm.png')
     plt.close()
+
+    plt.scatter(Time, Absorbance, s=5)
+    plt.plot(Time, out.best_fit)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Absorbance')
+    plt.savefig(f'fit_{closest_wavelength}_nm_no_legend.png')
+    plt.close()
+
 else:
     print(f'Wavelength {closest_wavelength} not found in the data.')
