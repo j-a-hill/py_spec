@@ -1,3 +1,36 @@
+"""
+Spectroscopy Data Import Module
+
+This module provides functions to import spectroscopy data from various file formats
+and convert them to a tidy format suitable for analysis.
+
+Key Features:
+- Auto-detection of column types (wavelength, absorbance, time, metadata)
+- Support for multiple file formats (CSV, Excel, TXT, ASC)
+- Flexible column naming (case-insensitive)
+- Conversion from wide to tidy format
+- Preservation of metadata columns
+
+Functions:
+    load_absorbance_data: Legacy function for .asc/.txt files (backward compatible)
+    detect_column_type: Auto-detect column type from name
+    load_tidy_data: Load and convert data to tidy format
+    load_spectroscopy_data: Unified loader with format auto-detection
+
+Examples:
+    # Load legacy .asc file
+    df = load_absorbance_data('data.asc', time_point_interval=0.1)
+    
+    # Load CSV with automatic tidy conversion
+    df = load_tidy_data('data.csv')
+    
+    # Load with specific parameters
+    df = load_tidy_data('data.csv', wavelength_col='nm', time_interval=0.5)
+    
+    # Use unified loader (recommended)
+    df = load_spectroscopy_data('data.csv', tidy=True)
+"""
+
 import numpy as np
 import pandas as pd
 import os
