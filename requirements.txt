@@ -1,0 +1,18 @@
+# Python package requirements for py_spec
+# Spectroscopy data processing and analysis
+
+# Core data processing
+numpy>=2.0.0
+pandas>=2.2.0
+
+# Scientific computing
+scipy>=1.13.0
+
+# Plotting and visualization
+matplotlib>=3.8.0
+
+# Curve fitting and modeling
+lmfit>=1.3.0
+
+# Baseline correction
+pybaselines>=1.1.0
