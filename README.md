@@ -2,6 +2,16 @@ Python code for tidying and plotting spectroscopy data, particular time-resolved
 
 Expects data in text formats with whitespaces e.g. .asc  
 
+## Installation
+
+Install the required dependencies using pip:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Usage
+
 Run using :
 
 >python spec_main.py -i YOUR_DATA
