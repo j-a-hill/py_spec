@@ -254,8 +254,8 @@ def load_tidy_data(file_path: str,
             # Create time points based on interval
             time_values = [i * time_interval for i in range(len(measurement_candidates))]
         elif time_col is not None:
-            # Use existing time column values
-            time_values = df[time_col].values if time_col in df.columns else None
+            # Use existing time column values (already validated to be in df.columns)
+            time_values = df[time_col].values
         else:
             # Create sequential time points
             time_values = list(range(len(measurement_candidates)))
@@ -272,10 +272,9 @@ def load_tidy_data(file_path: str,
         else:
             tidy_df['Time'] = tidy_df['TimePoint']
         
-        # Reorder columns
-        cols_order = ['Wavelength', 'Time', 'Measurement'] + metadata_cols
+        # Reorder columns to standard tidy format
         tidy_df = tidy_df[[wavelength_col, 'Time', 'Measurement'] + metadata_cols]
-        tidy_df.columns = cols_order
+        tidy_df.columns = ['Wavelength', 'Time', 'Measurement'] + metadata_cols
     
     return tidy_df
 
@@ -323,9 +322,5 @@ def load_spectroscopy_data(file_path: str,
         except Exception:
             pass
     
-    # For files with headers or when tidy format is requested
-    if tidy or format == 'tidy':
-        return load_tidy_data(file_path, **kwargs)
-    else:
-        # Load as matrix format
-        return load_tidy_data(file_path, **kwargs)
+    # For all other cases, load and convert to tidy format
+    return load_tidy_data(file_path, **kwargs)

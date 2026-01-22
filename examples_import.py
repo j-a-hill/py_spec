@@ -8,7 +8,9 @@ functions in spec_import.py to handle different data formats.
 
 import sys
 import os
-sys.path.insert(0, '/home/runner/work/py_spec/py_spec')
+
+# Add current directory to path for imports
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from spec_import import (
     load_absorbance_data, 
