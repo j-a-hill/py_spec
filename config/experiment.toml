@@ -1,0 +1,212 @@
+# Experiment declaration for the in-crystallo UV-vis dataset.
+#
+# R37S HGD microcrystals in an EVAL thin-film sandwich, probed on a
+# fibre-coupled Andor SR303i / DU970P spectrograph while being irradiated
+# with X-rays at a series of attenuator settings.  Beamtime mx29074-47,
+# 22 September 2023.
+#
+# Every raw file is assigned to a condition here rather than inferred from
+# its name: the beamline naming is inconsistent (see registry.py) and an
+# explicit table is auditable.
+
+raw_dir = "../HGD_nanospec/mx29074-47"
+
+# --------------------------------------------------------------------------
+# Dose model
+# --------------------------------------------------------------------------
+# From the RADDOSE-3D run supplied with the dataset ("raddose out.docx"):
+#   Top hat beam 50.0 x 50.0 um, 5.0e12 photons/s at 12.4 keV
+#   cuboid crystal 20 x 20 x 5 um, solvent fraction 89.59 %
+#   0.1 s exposure -> Average Dose (Whole Crystal) = 0.104181 MGy
+#
+# The spectrometer runs a continuous kinetic series with a 0.1 s cycle, so
+# absorbed dose accumulates linearly with elapsed time.  The value below is
+# the dose rate at 100 % transmission; each condition scales it by its
+# nominal attenuator transmission.
+#
+# CAVEAT, to be resolved before the numbers are quoted in the thesis: the
+# chapter methods state a 20 x 20 um beam and 8e12 ph/s for the I24
+# time-resolved experiment, whereas this RADDOSE run used 50 x 50 um and
+# 5e12 ph/s.  If the spectroscopy beam differed from the value modelled
+# here, every dose axis rescales by a constant factor -- relative
+# comparisons between transmission levels are unaffected.
+[dose]
+raddose_dose_per_exposure_MGy = 0.104181
+raddose_exposure_s = 0.1
+dose_rate_MGy_per_s_at_100pct = 1.04181
+# Alternative metrics reported by the same RADDOSE run, for the caveat table.
+raddose_max_dose_MGy = 0.104211
+raddose_diffraction_weighted_MGy = 0.052090
+
+# --------------------------------------------------------------------------
+# Reference measurements (single Accumulate spectra, not kinetic series)
+# --------------------------------------------------------------------------
+[references]
+DTNB_RT = "DTNB_RT.asc"
+buffer_RT = "buffer_RT.asc"
+DTNB_cryo = "DTNB_cryo.asc"
+buffer_cryo = "buffer_cryo.asc"
+DTNB_RT_xrays = "DTNB_RT_xrays.asc"
+buffer_RT_xrays = "buffer_RT_xrays.asc"
+DTNB_cryo_xrays = "DTNB_cryo_xrays.asc"
+
+# --------------------------------------------------------------------------
+# 100 K single-crystal series: one spectrum before X-rays, then repeated
+# spectra after successive X-ray exposures on the same crystal.
+# --------------------------------------------------------------------------
+[cryo]
+DTNB_crystal1 = [
+    "hgd_R37S_DTNB_cryo_1_before_xrays.asc",
+    "hgd_R37S_DTNB_cryo_1_after_xrays.asc",
+    "hgd_R37S_DTNB_cryo_1_after_xrays_2.asc",
+    "hgd_R37S_DTNB_cryo_1_after_xrays_3.asc",
+    "hgd_R37S_DTNB_cryo_1_after_xrays_4_100p.asc",
+]
+apo_crystal1 = [
+    "hgd_R37S_cryo_1_before_xrays.asc",
+    "hgd_R37S_cryo_1_after_xrays.asc",
+    "hgd_R37S_cryo_1_after_xrays_2.asc",
+    "hgd_R37S_cryo_1_after_xrays_3.asc",
+]
+apo_crystal2 = [
+    "hgd_R37S_cryo_2_before_xrays.asc",
+    "hgd_R37S_cryo_2_after_xrays.asc",
+    "hgd_R37S_cryo_2_after_xrays_2.asc",
+    "hgd_R37S_cryo_2_after_xrays_3.asc",
+]
+apo_crystal3 = [
+    "hgd_R37S_cryo_3_before_xrays.asc",
+    "hgd_R37S_cryo_3_after_xrays.asc",
+    "hgd_R37S_cryo_3_after_xrays_2.asc",
+    "hgd_R37S_cryo_3_after_xrays_3.asc",
+]
+
+# --------------------------------------------------------------------------
+# Room-temperature multicrystal kinetic series.
+# Five crystal positions per condition, 1000 spectra each at 0.1 s.
+# --------------------------------------------------------------------------
+
+[conditions.DTNB_5]
+label = "DTNB, 5% T"
+soak = "DTNB"
+transmission_pct = 5
+files = [
+    "hgd_R37S_DTNB_1_5_transmission.asc",
+    "hgd_R37S_DTNB_2_5_transmission.asc",
+    "hgd_R37S_DTNB_3_5_transmission.asc",
+    "hgd_R37S_DTNB_4_5_transmission.asc",
+    "hgd_R37S_DTNB_5_5_transmission.asc",
+]
+
+[conditions.DTNB_25]
+label = "DTNB, 25% T"
+soak = "DTNB"
+transmission_pct = 25
+files = [
+    "hgd_R37S_DTNB_6_25_transmission.asc",
+    "hgd_R37S_DTNB_7_25_transmission.asc",
+    "hgd_R37S_DTNB_8_25_transmission.asc",
+    "hgd_R37S_DTNB_9_25_transmission.asc",
+    "hgd_R37S_DTNB_10_25_transmission.asc",
+]
+
+[conditions.DTNB_50]
+label = "DTNB, 50% T"
+soak = "DTNB"
+transmission_pct = 50
+files = [
+    "hgd_R37S_DTNB_11_50_transmission.asc",
+    "hgd_R37S_DTNB_12_50_transmission.asc",
+    "hgd_R37S_DTNB_13_50_transmission.asc",
+    "hgd_R37S_DTNB_14_50_transmission.asc",
+    "hgd_R37S_DTNB_15_50_transmission.asc",
+]
+
+[conditions.DTNB_100]
+label = "DTNB, 100% T"
+soak = "DTNB"
+transmission_pct = 100
+files = [
+    "hgd_R37S_DTNB_16_100_transmission.asc",
+    "hgd_R37S_DTNB_17_100_transmission.asc",
+    "hgd_R37S_DTNB_18_100_transmission.asc",
+    "hgd_R37S_DTNB_19_100_transmission.asc",
+    "hgd_R37S_DTNB_20_100_transmission.asc",
+]
+
+[conditions.apo_5]
+label = "apo, 5% T"
+soak = "apo"
+transmission_pct = 5
+files = [
+    "hgd_R37S_test21_5_transmission.asc",
+    "hgd_R37S_test22_5_transmission.asc",
+    "hgd_R37S_test23_5_transmission.asc",
+    "hgd_R37S_test24_5_transmission.asc",
+    "hgd_R37S_test25_5_transmission.asc",
+]
+
+[conditions.apo_10]
+label = "apo, 10% T"
+soak = "apo"
+transmission_pct = 10
+files = [
+    "hgd_R37S_test16_10_transmission.asc",
+    "hgd_R37S_test17_10_transmission.asc",
+    "hgd_R37S_test18_10_transmission.asc",
+    "hgd_R37S_test19_10_transmission.asc",
+    "hgd_R37S_test20_10_transmission.asc",
+]
+
+[conditions.apo_25]
+label = "apo, 25% T"
+soak = "apo"
+transmission_pct = 25
+files = [
+    "hgd_R37S_test11_25_transmission.asc",
+    "hgd_R37S_test12_25_transmission.asc",
+    "hgd_R37S_test13_25_transmission.asc",
+    "hgd_R37S_test14_25_transmission.asc",
+    "hgd_R37S_test15_25_transmission.asc",
+]
+
+[conditions.apo_50]
+label = "apo, 50% T"
+soak = "apo"
+transmission_pct = 50
+files = [
+    "hgd_R37S_test6_50_transmission.asc",
+    "hgd_R37S_test7_50_transmission.asc",
+    "hgd_R37S_test8_50_transmission.asc",
+    "hgd_R37S_test9_50_transmission.asc",
+    "hgd_R37S_test10_50_transmission.asc",
+]
+
+[conditions.apo_100]
+label = "apo, 100% T"
+soak = "apo"
+transmission_pct = 100
+files = [
+    "hgd_R37S_test_100_transmission.asc",
+    "hgd_R37S_test2_100_transmission.asc",
+    "hgd_R37S_test3_100_transmission.asc",
+    "hgd_R37S_test4_100_transmission.asc",
+    "hgd_R37S_tes5t_100_transmission.asc",
+]
+
+# --------------------------------------------------------------------------
+# Analysis windows (nm)
+# --------------------------------------------------------------------------
+[windows]
+# Region where no chromophore in this system absorbs; used to fit and remove
+# the crystal scattering background.
+scatter_fit = [470.0, 725.0]
+# TNB absorbance band (412 nm maximum in solution).
+tnb = [395.0, 430.0]
+# Region that gains absorbance under irradiation in both soak states.
+uv_growth = [300.0, 325.0]
+# Internal zero: scatter-corrected absorbance should sit at zero here.
+internal_zero = [470.0, 500.0]
+# Below this the detector is shot-noise dominated in these films.
+analysis_min = 280.0
+analysis_max = 725.0

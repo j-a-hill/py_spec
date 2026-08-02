@@ -1,0 +1,279 @@
+% ============================================================
+% Draft replacement text for the spectroscopy sections of Ch2
+% (Sulphur biochemistry in Human gamma-D-Crystallin)
+%
+% Plain .tex source for pasting into Overleaf.
+% Figure/table labels assume the crystalspec outputs; adjust
+% \graphicspath and filenames to match the Figures/Ch2 folder.
+%
+% NOTE TO JAKE, resolve before submission: the RADDOSE-3D run
+% supplied with the dataset modelled a 50 x 50 um beam at
+% 5 x 10^12 ph s^-1, whereas the current methods text states
+% 20 x 20 um at 8 x 10^12 ph s^-1 for I24. If the spectroscopy
+% beam differed from the modelled one, every absolute dose
+% below rescales by a constant factor; relative comparisons
+% between transmission levels are unaffected. The dose figures
+% are quoted here as calculated, and the discrepancy is flagged
+% in the Methods paragraph.
+% ============================================================
+
+
+% ---------------- METHODS ----------------
+
+\subsubsection{Spectroscopy}
+
+DTNB soaked R37S crystals were loaded into an EVAL film sandwich as shown in
+\ref{fig:thinfilm} and described in \parencite{axford2016thinfilms,
+JAHO2024fixedtarget}. The thin film sandwich was mounted on the beamline
+goniometer using a tweezer pin; each region of the film was initially aligned
+using the OAV so that it was coincident with the X-ray beam, and then rotated
+45\(^{\circ}\) so that the crystal slurry was aligned with the UV-Vis
+spectrometer optics. Spectra were recorded on an Andor SR303i spectrograph
+fitted with a DU970P electron-multiplying CCD, using a 150 l mm\(^{-1}\)
+grating blazed at 300 nm and a 100 \(\mu\)m entrance slit. Each spectrum
+comprised five accumulations of 20 ms, and spectra were acquired as a
+kinetics series with a cycle time of 0.1 s for 1000 cycles, giving 100 s of
+continuous acquisition per film position. Because the probe beam samples a
+region of the thin film rather than a single crystal, each measurement is an
+ensemble over several randomly oriented microcrystals together with the
+surrounding mother liquor; the random orientation is advantageous, as it
+averages out the orientation dependent absorbance that complicates
+single crystal in crystallo spectroscopy. Five film positions were recorded
+for each condition. Cryocooled measurements were made on single crystals at
+100 K, with single accumulated spectra recorded before irradiation and after
+each successive X-ray exposure.
+
+Absorbed X-ray dose was estimated using RADDOSE-3D \parencite{dickerson2024doses}.
+The average whole crystal dose for a 0.1 s exposure at full beam was
+0.104 MGy, giving a dose rate of 1.042 MGy s\(^{-1}\) at 100 \% transmission,
+and dose was taken to accumulate linearly with elapsed time and to scale with
+the nominal attenuator transmission. It should be noted that the RADDOSE-3D
+model used a 50 \(\times\) 50 \(\mu\)m beam at 5 \(\times\)
+10\(^{12}\) ph s\(^{-1}\), which differs from the beam parameters recorded for
+the diffraction experiment; the absolute dose scale is therefore provisional,
+although comparisons between transmission levels are unaffected.
+
+Spectra were analysed using custom Python code (crystalspec), which reads the
+raw Andor output directly and regenerates every figure and table in a single
+pass. Three properties of the data determined the analysis. First, the
+absorbance of a microcrystal thin film is dominated by scattering rather than
+by absorption, and the scattering magnitude varied by a factor of two to four
+between film positions within a single condition; absolute absorbances were
+therefore never averaged across positions. Second, mother liquor is present in
+the probe path, so absolute absorbance carries a solvent contribution that
+cannot be separated from the crystalline one. Third, the crystalline volume
+fraction within the beam is unknown and varies between positions, and
+consequently no amplitude reported here has been converted to a concentration
+or to an absolute TNB occupancy.
+
+Each spectrum was therefore expressed as a difference against the mean of the
+first five frames recorded at that same film position, before irradiation. A
+scattering background of the form
+\(A_{\mathrm{scatter}}(\lambda) = c(\lambda/500)^{-n} + b\) was then fitted
+over 470--725 nm, a region in which neither TNB, DTNB nor the protein absorbs,
+and subtracted across the full spectral range. Held out cross validation, in
+which the background was fitted over 500--725 nm and its prediction tested
+against the withheld 470--500 nm region, showed that a power law described the
+scattering better than either a linear or a constant background (median
+residuals of 0.0056 and 0.0060 against 0.0122 absorbance units respectively),
+but distinguished only weakly between exponents. The exponent was accordingly
+fixed at \(n = 3\); allowing it to float produced values that ran to the
+imposed bounds for a fifth of the DTNB spectra and a third of the apo spectra.
+The residual sensitivity to this choice is reported as a systematic
+uncertainty rather than concealed in a point estimate.
+
+The detector baseline was reset periodically during acquisition to counteract
+upward drift, which appears in the data as a step displacing the whole
+spectrum between consecutive frames. Such steps were detected as changes in
+the mean absorbance over 500--650 nm exceeding 0.01 absorbance units between
+successive frames, a threshold approximately thirty times the frame to frame
+noise of 3.2 \(\times\) 10\(^{-4}\) determined from the conditions in which no
+resets occurred. Isolated resets were removed by subtracting the wavelength
+resolved offset across the step from all subsequent frames. Where resets
+arrived in bursts, defined as three or more within 2 s, the trace was no
+longer treated as a continuous measurement of a single sample state and the
+analysis window was ended at the onset of the burst. Reset counts, stitching
+and truncation points are given for every film position in Table
+\ref{tab:qc_positions} and illustrated in Figure \ref{fig:spec_qc}.
+
+The TNB absorbance was quantified by integrating the scatter corrected
+difference spectra over 395--430 nm and dividing by the window width, giving a
+mean absorbance change. A fixed window was used in preference to peak fitting
+because the 412 nm TNB maximum reported in solution is not resolved in
+crystallo; it appears only as a shoulder on a substantially larger feature
+near 330--345 nm, and a free Gaussian fitted to it returns a centre that
+wanders across the full permitted range together with an amplitude that
+collapses to zero for a large fraction of timepoints. Two further windows were
+integrated in parallel: 300--325 nm, which gains absorbance under irradiation,
+and 470--500 nm, which should remain at zero after scatter correction and
+therefore serves as an internal null. Uncertainties were obtained by
+percentile bootstrap over the five film positions, resampling the unit of
+replication rather than assuming normality, and significance was assessed by
+exact permutation over all 252 possible five against five splits.
+
+
+% ---------------- RESULTS ----------------
+
+\subsubsection{Spectroscopy}
+
+The initial spectra of DTNB soaked crystals show a broad absorbance maximum
+near 330--345 nm with a shoulder extending through 412 nm, the reported
+maximum for TNB in solution. Contributions are expected from TNB, from
+unreacted DTNB near 330 nm, and from the protein itself below 300 nm,
+including the disulphide absorbance near 260 nm
+\parencite{faraj2019cysreactivity}. The 412 nm band is not resolved from the
+larger feature at shorter wavelength, and the analysis was conducted in
+difference space accordingly.
+
+Referencing each film position to its own pre-irradiation state reveals a
+reproducible response to irradiation (Figure \ref{fig:dtnb_signature}). In
+both DTNB soaked and unlabelled crystals a positive feature grows near 310 nm
+as dose accumulates, consistent with a general radiation driven process that
+is independent of the label. In the DTNB soaked crystals, and not in the
+matched controls, this is accompanied by a negative feature spanning
+approximately 370--450 nm and overlapping the TNB band. Integrated over
+395--430 nm, the difference signal at the highest dose analysed reaches
+\(-0.011\) at 5 \% transmission, \(-0.014\) at 25 \%, \(-0.006\) at 50 \% and
+\(-0.025\) at 100 \%, against values of \(+0.006\) to \(+0.031\) in the
+corresponding unlabelled controls (Table \ref{tab:spec_summary}).
+
+The sign of this signal separates the two soak states cleanly at the three
+lower dose rates. Comparing the dose integrated 395--430 nm signal between
+DTNB soaked and matched unlabelled films, all five DTNB positions fall below
+all five control positions at 5 \%, 25 \% and 50 \% transmission, giving the
+smallest attainable exact permutation probability for a five against five
+comparison (\(p = 0.0079\), \(p = 0.032\) after Bonferroni correction for four
+comparisons) with effect sizes of \(d = -1.8\), \(-2.3\) and \(-2.3\)
+respectively. At 100 \% transmission the separation is lost
+(\(p = 0.18\), \(d = -1.0\)): the unlabelled films themselves develop a
+negative feature in this region at the highest dose rate, and the labelled and
+unlabelled distributions overlap. This condition also retains the least data,
+since baseline instability truncated all five positions early, and the loss of
+significance may reflect reduced power rather than a genuine absence of the
+effect. The negative feature should therefore be regarded as label specific at
+the three lower dose rates, and as not separable from the general radiation
+response at the highest.
+
+The loss of TNB absorbance is dose dependent (Figure \ref{fig:dose_dependence}).
+A stretched exponential in dose described the 395--430 nm signal better than
+linear, single exponential or biexponential alternatives for every DTNB
+condition, by both information criterion and held out error, improving on the
+linear null by 75 to 252 AIC units. The characteristic dose recovered from
+this fit rises with transmission, from 0.25 MGy at 5 \% through 1.09 MGy at
+25 \% to 3.6--9.2 MGy at the two highest settings; an independent estimate
+obtained by singular value decomposition of the same difference matrices gives
+0.34, 1.50, 3.44 and 4.89 MGy across the same series. The two approaches
+differ in detail, and the bootstrap intervals on the band integration route
+are wide, spanning more than an order of magnitude at 5 \% and 25 \%
+transmission, but both indicate that a larger absorbed dose is required to
+produce the same loss of signal when that dose is delivered more rapidly.
+Such an inverse dose rate dependence is characteristic of a process limited by
+the diffusion or recombination of radiolytic species rather than by the
+absorbed dose alone. It should be noted that the shape parameter of the
+stretched exponential reached its imposed upper bound in all four DTNB
+conditions, so the characteristic doses derived from these fits are
+approximate and should not be quoted as converged estimates.
+
+The response at 100 K is markedly attenuated (Figure \ref{fig:rt_vs_cryo}). In
+the single DTNB soaked crystal measured at 100 K the integrated 395--430 nm
+signal remains at \(+0.002\) through two successive X-ray exposures and rises
+only to \(+0.005\) after the third, in contrast to the negative excursion of
+\(-0.011\) to \(-0.025\) reached at room temperature. Only at the final,
+unattenuated exposure does the cryocooled crystal depart appreciably from its
+starting state. The comparison is necessarily qualitative, since the
+cryocooled measurements were made on single crystals with an exposure index
+rather than a calibrated dose axis, and only one DTNB soaked crystal was
+measured; nevertheless the direction is consistent with the expected
+suppression of secondary radiation chemistry at cryogenic temperature.
+
+Taken together these observations indicate that the TNB moiety is lost from
+the crystal under X-ray irradiation at room temperature, at a rate that is
+slow enough to permit measurements on the order of seconds but fast enough to
+constrain the useful lifetime of the label in a serial experiment. At the
+lowest dose rate examined, half of the total change occurs within
+approximately 0.25 MGy, which is well below the dose accumulated in a typical
+room temperature serial data collection. The rate is, however, many orders of
+magnitude slower than the ultraviolet driven disulphide cleavage that this
+probe is intended to report, which has been observed on femtosecond to
+picosecond timescales in L-cysteine dimers
+\parencite{ochmann2024uv_Lcys_XAS}; the radiation induced loss of TNB is
+therefore a background process to be accounted for rather than a competing
+signal on the timescale of an ultrafast pump probe measurement.
+
+A caveat applies to all of the above. The internal null window at
+470--500 nm, which should remain at zero once the scattering background has
+been removed, instead drifts to between 12 and 29 \% of the co-located TNB
+signal at the highest doses in the DTNB conditions. Part of the apparent
+partial recovery of the signal at high dose coincides with the region in which
+this drift is largest, and may therefore reflect incomplete scatter correction
+rather than genuine photochemistry. The magnitude of the TNB signal is
+additionally sensitive to the assumed scattering exponent, shifting by 11 to
+60 \% depending on condition when the exponent is varied between 1 and 4.
+These systematic effects bound the precision of the values reported here,
+although they are considerably smaller than the difference between the
+labelled and unlabelled films at the three lower dose rates, and do not affect
+the sign of that difference.
+
+
+% ---------------- SUGGESTED CAPTIONS ----------------
+
+% Figure: DTNB specific difference signature
+\caption{Difference absorbance of DTNB soaked and unlabelled R37S
+microcrystal films under X-ray irradiation. \textbf{A.} Scatter corrected
+difference spectra at each of four X-ray transmission settings, each film
+position referenced to its own pre-irradiation state and averaged over five
+positions, shown at 80 \% of the dose range common to the labelled and
+unlabelled series. Blue, DTNB soaked; orange, unlabelled; black, the
+difference between them. The shaded band marks the 395--430 nm window used to
+quantify TNB. Both soak states gain absorbance near 310 nm, whereas only the
+DTNB soaked films develop the negative feature spanning 370--450 nm.
+\textbf{B.} The same signal integrated over 395--430 nm and plotted against
+absorbed dose, with bands giving the 95 \% percentile bootstrap interval over
+five film positions.}
+
+% Figure: dose dependence
+\caption{Dose dependence of the TNB absorbance. \textbf{A.} Integrated
+395--430 nm difference signal against absorbed dose for the four transmission
+settings, solid lines for DTNB soaked films and dotted for unlabelled
+controls; shaded bands give the 95 \% bootstrap interval over five film
+positions. \textbf{B.} The dose integrated signal for each individual film
+position, the quantity on which the permutation test is computed; horizontal
+bars give the group means. An asterisk denotes separation at
+\(p < 0.05\) after Bonferroni correction over four comparisons.
+\textbf{C.} Characteristic dose for the loss of TNB absorbance, recovered
+independently by band integration and by singular value decomposition, with
+95 \% bootstrap intervals. Both routes indicate that a larger absorbed dose is
+required at higher dose rate.}
+
+% Figure: RT versus 100 K
+\caption{Comparison of the room temperature and cryocooled response.
+\textbf{A.} Difference spectra for single crystals at 100 K, each successive
+X-ray exposure referenced to the same pre-irradiation spectrum; blue, the
+single DTNB soaked crystal, orange, three unlabelled crystals, with increasing
+opacity for successive exposures. \textbf{B.} Equivalent room temperature
+difference spectra at 5 \% transmission for comparison. \textbf{C.} Integrated
+395--430 nm signal against exposure number at 100 K; dotted lines give the
+corresponding room temperature endpoint for each soak state. The cryocooled
+DTNB crystal remains close to its starting state until the final unattenuated
+exposure. The two geometries are not directly commensurable, the room
+temperature measurement being an ensemble over randomly oriented microcrystals
+with a calibrated dose axis and the cryocooled measurement a single crystal
+with an exposure index only.}
+
+% Figure: quality control
+\caption{Quality control of the spectroscopic analysis. \textbf{A.} Raw
+pre-irradiation spectra for five film positions of one condition, illustrating
+the two to fourfold variation in scattering between positions. \textbf{B.} The
+same spectra after subtraction of a power law scattering background fitted
+over the shaded 470--725 nm window. \textbf{C.} Fitted scattering amplitude for
+every film position of every condition; horizontal bars give the medians.
+\textbf{D.} Detection of detector baseline resets as changes in the mean
+500--650 nm absorbance between successive frames; the dashed line marks the
+detection threshold and the solid line the onset of the first burst.
+\textbf{E.} Absorbance at 412 nm before and after stitching of isolated
+resets, with the region excluded following the burst shaded. \textbf{F.}
+Difference traces at 412 nm for five film positions, showing the common
+response recovered once each position is referenced to its own dark state.
+\textbf{G.} Analysis window for every film position; coloured segments were
+analysed and grey segments excluded, circles mark stitched resets and vertical
+bars the onset of a reset burst.}
