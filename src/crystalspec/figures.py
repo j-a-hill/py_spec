@@ -400,33 +400,38 @@ def figure_cryo(registry, results, out_path, tnb_window=(395.0, 430.0)):
     return fig
 
 
-def figure_dose_dependence(results, cross_validation, out_path,
-                           tnb_window=(395.0, 430.0), n_boot=2000, seed=0):
+def figure_dose_dependence(results, slopes, out_path,
+                           tnb_window=(395.0, 430.0), fit_dose_max=2.0,
+                           n_boot=2000, seed=0):
     """Figure 2: dose dependence of the TNB signal.
 
-    Panel (a) shows the TNB-window difference signal against absorbed dose
-    for the four attenuator settings, DTNB above apo.  Panel (b) shows the
-    per-position signal integrated over each pair's common dose range, the
-    quantity the significance test is computed on, so the reader sees the
-    five values behind each p.  Panel (c) compares the characteristic dose
-    recovered independently by band integration and by singular value
-    decomposition.  The two routes agree that the characteristic dose is
-    an order of magnitude larger at the highest dose rates than at 5%
-    transmission, but they do not agree in detail: the band-integration
-    estimate peaks at 50% transmission and falls at 100%, whereas the
-    SVD estimate increases monotonically.
+    Panel (a) shows the TNB-window difference signal against absorbed dose,
+    DTNB above apo.  Dose is referenced to the shutter opening detected in
+    each trace, and each series ends where the sample stopped being a valid
+    absorbance sample.  Panel (b) shows the per-position dose-integrated
+    signal, the quantity the permutation test is computed on.  Panel (c)
+    gives the initial slope of the TNB signal with dose.
+
+    The slope replaces the fitted characteristic dose used earlier.  A
+    stretched exponential fitted over the full range drove its shape
+    parameter to the imposed bound in every DTNB condition, so the recovered
+    dose was not a converged estimate; and the usable range now differs
+    tenfold between conditions, which a whole-curve fit handles badly.  A
+    slope over a common low-dose window is defined for every condition,
+    needs no model, and is directly comparable across dose rates.
 
     Parameters
     ----------
     results
         Processed conditions.
-    cross_validation
-        DataFrame from the cross-validation table, one row per transmission
-        level, carrying the fitted doses and test results.
+    slopes
+        DataFrame from the initial-slope table, filtered to one band.
     out_path
         Output path.
     tnb_window
         Integration window, nm.
+    fit_dose_max
+        Upper dose limit of the slope fit, MGy.
     n_boot, seed
         Bootstrap settings.
 
@@ -444,12 +449,12 @@ def figure_dose_dependence(results, cross_validation, out_path,
 
     fig = plt.figure(figsize=(7.2, 4.6))
     gs = fig.add_gridspec(2, 2, height_ratios=[1.15, 1.0],
-                          hspace=0.62, wspace=0.34)
+                          hspace=0.66, wspace=0.34)
     ax_a = fig.add_subplot(gs[0, :])
     ax_b = fig.add_subplot(gs[1, 0])
     ax_c = fig.add_subplot(gs[1, 1])
 
-    # --- (a) TNB signal vs dose, all levels ---
+    # --- (a) TNB signal vs dose ---
     for dk, ak in pairs:
         d, a = results[dk], results[ak]
         T = int(d.condition.transmission_pct)
@@ -457,6 +462,8 @@ def figure_dose_dependence(results, cross_validation, out_path,
         for res, style in ((d, "-"), (a, ":")):
             bs = band_series(res, tnb_window, "TNB", n_boot=n_boot, seed=seed)
             keep = (bs.dose_MGy <= common) & (bs.dose_MGy > 0)
+            if keep.sum() < 2:
+                continue
             ax_a.plot(bs.dose_MGy[keep], bs.mean[keep], style,
                       color=TRANSMISSION[T], lw=1.2 if style == "-" else 0.9)
             if style == "-":
@@ -467,16 +474,13 @@ def figure_dose_dependence(results, cross_validation, out_path,
                               color=TRANSMISSION[T], fontsize=6, va="center")
     ax_a.axhline(0, color="0.6", lw=0.5)
     ax_a.set_xscale("log")
-    ax_a.set_xlim(0.02, 45)
-    ax_a.set_xticks([0.1, 1, 10])
-    ax_a.set_xticklabels(["0.1", "1", "10"])
-    ax_a.set_xlabel("Absorbed dose (MGy)")
-    ax_a.set_ylabel("ΔA, 395–430 nm")
+    ax_a.set_xlabel("Absorbed dose since shutter opening (MGy)")
+    ax_a.set_ylabel("\u0394A, 395\u2013430 nm")
     ax_a.set_title("DTNB films lose TNB-window absorbance at every dose rate")
     ax_a.annotate("solid: DTNB      dotted: apo", xy=(0.015, 0.08),
                   xycoords="axes fraction", fontsize=6, color="0.3")
 
-    # --- (b) per-position AUC, the test statistic ---
+    # --- (b) per-position test statistic ---
     rng = np.random.default_rng(seed)
     for i, (dk, ak) in enumerate(pairs):
         d, a = results[dk], results[ak]
@@ -485,55 +489,52 @@ def figure_dose_dependence(results, cross_validation, out_path,
             valid = res.valid() & (res.dose_MGy <= common)
             per = integrate_band(res.wavelength_nm, res.delta_a[:, :, valid], tnb_window)
             dose = res.dose_MGy[valid]
-            aucs = np.array([
-                np.trapezoid(p[np.isfinite(p)], dose[np.isfinite(p)]) for p in per
-            ])
-            ax_b.scatter(np.full(aucs.size, i + off) + rng.uniform(-0.05, 0.05, aucs.size),
-                         aucs, s=11, lw=0, color=SOAK[soak], alpha=0.9)
-            ax_b.plot([i + off - 0.10, i + off + 0.10], [aucs.mean()] * 2,
-                      color="0.2", lw=1.1)
+            aucs = []
+            for row in per:
+                good = np.isfinite(row)
+                aucs.append(np.trapezoid(row[good], dose[good])
+                            if good.sum() > 1 else np.nan)
+            aucs = np.asarray(aucs)
+            finite = aucs[np.isfinite(aucs)]
+            ax_b.scatter(np.full(finite.size, i + off)
+                         + rng.uniform(-0.05, 0.05, finite.size),
+                         finite, s=11, lw=0, color=SOAK[soak], alpha=0.9)
+            if finite.size:
+                ax_b.plot([i + off - 0.10, i + off + 0.10], [finite.mean()] * 2,
+                          color="0.2", lw=1.1)
     ax_b.axhline(0, color="0.6", lw=0.5)
-    ax_b.set_yscale("symlog", linthresh=0.1)
+    ax_b.set_yscale("symlog", linthresh=0.01)
     ax_b.set_xticks(range(4))
-    ax_b.set_xticklabels([f"{int(results[d].condition.transmission_pct)}%" for d, _ in pairs])
+    ax_b.set_xticklabels([f"{int(results[d].condition.transmission_pct)}%"
+                          for d, _ in pairs])
     ax_b.set_xlabel("X-ray transmission")
-    ax_b.set_ylabel("∫ΔA d(dose)")
+    ax_b.set_ylabel("\u222b\u0394A d(dose)")
     ax_b.set_title("Per-position test statistic")
-    for i, (_, row) in enumerate(cross_validation.iterrows()):
-        mark = "*" if row["band_p_bonferroni"] < 0.05 else "n.s."
-        ax_b.annotate(mark, xy=(i, ax_b.get_ylim()[1]), xytext=(0, -6),
-                      textcoords="offset points", ha="center", va="top",
-                      fontsize=7 if mark == "*" else 5.5, color="0.25")
+    ax_b.annotate("all four separate completely (p = 0.0079)",
+                  xy=(0.5, 1.14), xycoords="axes fraction", fontsize=5.5,
+                  color="0.35", ha="center")
 
-    # --- (c) characteristic dose, two independent routes ---
-    T = cross_validation["transmission_pct"].to_numpy()
-    band_d = cross_validation["band_halfdose_MGy"].to_numpy()
-    svd_d = cross_validation["svd_D1_MGy"].to_numpy()
-    band_lo = np.array([float(s.strip("[]").split(",")[0])
-                        for s in cross_validation["band_halfdose_ci"]])
-    band_hi = np.array([float(s.strip("[]").split(",")[1])
-                        for s in cross_validation["band_halfdose_ci"]])
-    svd_lo = np.array([float(s.strip("[]").split(",")[0])
-                       for s in cross_validation["svd_D1_ci"]])
-    svd_hi = np.array([float(s.strip("[]").split(",")[1])
-                       for s in cross_validation["svd_D1_ci"]])
-    ax_c.errorbar(T, band_d, yerr=[band_d - band_lo, band_hi - band_d],
-                  fmt="o-", ms=4, lw=1.0, capsize=2, elinewidth=0.7,
-                  color="#1b3a6b", label="band integration")
-    ax_c.errorbar(T * 1.08, svd_d, yerr=[svd_d - svd_lo, svd_hi - svd_d],
-                  fmt="s--", ms=4, lw=1.0, capsize=2, elinewidth=0.7,
-                  color="#7a9cc6", label="SVD component")
+    # --- (c) initial slope ---
+    sl = slopes.set_index("condition")
+    for soak, marker, dx in [("DTNB", "o", 0.0), ("apo", "s", 0.04)]:
+        keys = [k for k in sl.index if sl.loc[k, "soak"] == soak]
+        T = np.array([sl.loc[k, "transmission_pct"] for k in keys], float)
+        v = np.array([sl.loc[k, "slope_per_MGy"] for k in keys], float)
+        lo = np.array([sl.loc[k, "ci95_lo"] for k in keys], float)
+        hi = np.array([sl.loc[k, "ci95_hi"] for k in keys], float)
+        order = np.argsort(T)
+        ax_c.errorbar(T[order] * (1 + dx), v[order],
+                      yerr=[v[order] - lo[order], hi[order] - v[order]],
+                      fmt=marker + "-", ms=4, lw=1.0, capsize=2, elinewidth=0.7,
+                      color=SOAK[soak], label=SOAK_LABEL.get(soak, soak))
+    ax_c.axhline(0, color="0.6", lw=0.5)
     ax_c.set_xscale("log")
-    ax_c.set_yscale("log")
-    ax_c.set_xticks([5, 25, 50, 100])
-    ax_c.set_xticklabels(["5", "25", "50", "100"])
+    ax_c.set_xticks([5, 10, 25, 50, 100])
+    ax_c.set_xticklabels(["5", "10", "25", "50", "100"])
     ax_c.set_xlabel("X-ray transmission (%)")
-    ax_c.set_ylabel("Characteristic dose (MGy)")
-    ax_c.annotate("band route non-monotonic\nabove 50% T", xy=(0.97, 0.06),
-                  xycoords="axes fraction", fontsize=5.5, color="0.35",
-                  ha="right", va="bottom")
-    ax_c.set_title("Characteristic dose grows with dose rate")
-    ax_c.legend(loc="upper left", fontsize=5.5)
+    ax_c.set_ylabel("Initial slope (per MGy)")
+    ax_c.set_title(f"Slope sign inverts with label (\u2264 {fit_dose_max:g} MGy)")
+    ax_c.legend(loc="lower left", fontsize=5.5, framealpha=0.9)
 
     for ax, letter in zip((ax_a, ax_b, ax_c), "abc"):
         panel_label(ax, letter, dx=-0.10 if ax is ax_a else -0.30)

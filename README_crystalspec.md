@@ -64,6 +64,32 @@ referenced to its own pre-irradiation dark state, and a power-law
 background fitted on the non-absorbing 470-725 nm region is subtracted from
 every spectrum.
 
+**Acquisition started before the shutter did.** Recording was begun by hand
+a few seconds before the X-ray shutter was opened, and the delay was not
+logged. Zeroing dose at frame 0 therefore attributes dose that was never
+delivered, and because the error is a fixed *time* offset it scales with
+dose rate: a few tenths of a MGy at 5 % transmission, several MGy at
+100 %. The shutter is located per trace as the earliest persistent
+departure in any spectral region, and dose accumulates from there. The
+frames immediately preceding it form the dark reference.
+
+The detector must scan all regions, not one band. An earlier version
+triggered on the 300--325 nm damage band alone; that band responds slowly
+at low dose rate, so at 5 % transmission it fired about 10 s after
+irradiation had demonstrably begun, by which point the TNB window had
+already fallen 0.02 absorbance units. Referencing to that late window
+subtracted part of the signal and inverted the sign of the result.
+
+**The sample was irradiated past destruction.** Exposures were pushed
+until the EVAL film burned or crystals fractured. Beyond that point the
+trace is still recorded but no longer measures absorbance. The 600--700 nm
+window supplies the diagnostic: nothing in this system has a band there,
+and the change seen at high dose rate is flat to 0.001 absorbance units
+across 575--700 nm, so it reports bulk opacity rather than a chromophore.
+Frames beyond a sustained crossing are excluded. This check runs *before*
+scatter removal, because the power-law fit would otherwise absorb the very
+offset that signals the damage.
+
 **The detector baseline was reset during acquisition.** The operator reset
 the baseline periodically to counter upward drift, which appears in the
 data as a step across the whole spectrum. Isolated resets are stitched by
@@ -78,6 +104,8 @@ recorded per position in `table_S1_per_position_qc.csv` and drawn in
 | Module | Responsibility |
 |---|---|
 | `io.py` | read Andor `.asc` (data block + instrument footer) |
+| `onset.py` | locate the X-ray shutter within each series |
+| `optical.py` | flag frames where the sample stopped being a valid absorbance sample |
 | `registry.py` | which raw file is which measurement, from TOML |
 | `dose.py` | frame index and attenuation to absorbed dose |
 | `scatter.py` | power-law scattering background |
@@ -98,11 +126,12 @@ auditable.
 | File | Contents |
 |---|---|
 | `figure_1_dtnb_signature.png` | DTNB-specific difference signature against matched apo controls |
-| `figure_2_dose_dependence.png` | TNB signal against dose, per-position test statistic, characteristic dose |
+| `figure_2_dose_dependence.png` | TNB signal against dose, per-position test statistic, initial slope |
 | `figure_3_rt_vs_cryo.png` | room-temperature film ensemble against 100 K single crystals |
 | `figure_S1_quality_control.png` | scatter correction, reset handling, usable window per position |
 | `table_1_condition_summary.csv` | per condition: exposure, QC counts, endpoint band values |
 | `table_2_cross_validation.csv` | band integration against SVD, both quantification routes |
+| `table_4_initial_slopes.csv` | initial slope of each band against dose, with bootstrap intervals |
 | `table_3_label_specificity.csv` | DTNB against apo, exact permutation test per level |
 | `table_S1_per_position_qc.csv` | per position: resets, stitching, truncation, usable window |
 
@@ -122,8 +151,27 @@ auditable.
   distinguishes exponents. It is fixed at `n = 3`; spanning `n = 1..4`
   shifts the TNB integral by 11-60 % depending on condition (see
   `scatter.exponent_sensitivity`).
-- **n = 5 positions per condition** is a weak base for the bootstrap. Some
-  half-dose confidence intervals span more than an order of magnitude.
+- **n = 5 positions per condition** is a weak base for the bootstrap.
+- **The usable dose range differs tenfold between conditions** once
+  optically compromised frames are excluded: 25 MGy at 25 % transmission
+  against about 2 MGy at 50 % and 100 %. Whole-curve fits are correspondingly
+  ill-conditioned, which is why the dose response is reported as an initial
+  slope over a common low-dose window rather than as a fitted characteristic
+  dose. The stretched-exponential fits used earlier drove their shape
+  parameter to its bound in every DTNB condition and are not reported.
+- **Absorbed dose is an estimate.** Beyond the beam-size question above, the
+  shutter time is recovered from the data to a resolution of one 0.1 s frame,
+  and later where the onset is gradual. The detected onset is best read as an
+  upper bound on the true shutter time.
+- **No signal below about 300 nm.** Absorbance *falls* from 0.28 at
+  300--350 nm to 0.12 at 180--220 nm in both crystal and buffer, which cannot
+  happen if light is reaching the detector, and frame-to-frame noise there is
+  fifteen times worse than at 412 nm. The recorded pixels are a detector
+  floor, not a measurement. Disulphide n->sigma* absorption near 250--260 nm
+  is therefore *not* accessible in this dataset — not because the method
+  cannot reach it, but because this optical configuration (150 l/mm grating
+  blazed at 300 nm, centred at 454 nm, EVAL film and mother liquor in the
+  path) did not deliver light there.
 - **The third quantification route is inconclusive by construction, not by
   accident.** Reference-spectrum unmixing was run as an independent
   cross-check. It produced results, but they do not settle anything, for a

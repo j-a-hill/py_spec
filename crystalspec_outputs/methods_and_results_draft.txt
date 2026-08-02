@@ -15,6 +15,28 @@
 % between transmission levels are unaffected. The dose figures
 % are quoted here as calculated, and the discrepancy is flagged
 % in the Methods paragraph.
+%
+% SECOND NOTE, on the dose axis generally: the shutter time is
+% recovered from the spectra themselves, to a resolution of one
+% 0.1 s frame and later where the onset is gradual, so the
+% detected onset is an upper bound on the true shutter time and
+% the quoted doses are correspondingly upper-bounded estimates.
+% Combined with the beam-size question above, absorbed dose in
+% this section should be presented as an estimate rather than a
+% calibrated quantity.
+%
+% THIRD NOTE, on the deep UV: no usable signal exists below
+% about 300 nm in this dataset. Absorbance falls from 0.28 at
+% 300-350 nm to 0.12 at 180-220 nm in both crystal and buffer,
+% which cannot occur if light reaches the detector, and the
+% frame-to-frame noise there is fifteen times that at 412 nm.
+% Disulphide n->sigma* absorption near 250-260 nm is therefore
+% not accessible here. This is a limitation of the optical
+% configuration (150 l/mm grating blazed at 300 nm, centred at
+% 454 nm; EVAL film and mother liquor in the path), not of the
+% method, and is worth stating as a design lesson: a UV
+% transmitting mount, a UV blazed grating and a lower centre
+% wavelength would make the disulphide measurement feasible.
 % ============================================================
 
 
@@ -82,6 +104,36 @@ imposed bounds for a fifth of the DTNB spectra and a third of the apo spectra.
 The residual sensitivity to this choice is reported as a systematic
 uncertainty rather than concealed in a point estimate.
 
+Acquisition was started manually a short interval before the X-ray shutter
+was opened, and that interval was not recorded. Since dose accumulates only
+while the shutter is open, and since the offset is a fixed interval of time
+that corresponds to a larger absorbed dose at higher transmission, the start
+of irradiation was recovered from the data for each trace individually. It
+was taken as the earliest frame at which any spectral region departed
+persistently from its initial level, a departure being required to exceed six
+times the local noise for three consecutive frames. Detection across all
+regions rather than a single band is necessary because the response is not
+simultaneous across the spectrum: the 300--325 nm band develops slowly at low
+dose rate and, used alone, indicated an onset approximately 10 s after
+irradiation had demonstrably begun at 5 \% transmission. Recovered onsets
+were 3.2 to 6.4 s across the nine conditions and showed no systematic
+dependence on transmission, consistent with a manually operated shutter. Dose
+was accumulated from the recovered onset, and the five frames immediately
+preceding it were averaged to form the dark reference.
+
+Exposures were continued deliberately until the sample was visibly damaged.
+Beyond that point a trace continues to be recorded but no longer constitutes
+a measurement of absorbance, since the optical path itself has changed. Loss
+of optical integrity was identified using the 600--700 nm region, in which no
+component of the system absorbs. The change observed there at high dose rate
+is featureless, varying by less than 0.001 absorbance units between 575 and
+700 nm, and is therefore attributable to bulk opacity arising from bubble
+formation and fracture rather than to any chromophore. Frames beyond the
+first sustained excursion exceeding 0.03 absorbance units in this region were
+excluded. This assessment was made before scatter correction, as the
+power law fit would otherwise absorb the broadband offset by which the damage
+is recognised.
+
 The detector baseline was reset periodically during acquisition to counteract
 upward drift, which appears in the data as a step displacing the whole
 spectrum between consecutive frames. Such steps were detected as changes in
@@ -109,7 +161,14 @@ and 470--500 nm, which should remain at zero after scatter correction and
 therefore serves as an internal null. Uncertainties were obtained by
 percentile bootstrap over the five film positions, resampling the unit of
 replication rather than assuming normality, and significance was assessed by
-exact permutation over all 252 possible five against five splits.
+exact permutation over all 252 possible five against five splits. The dose
+response was summarised as the initial slope of the integrated signal against
+absorbed dose, fitted over a low dose window common to every condition. A
+slope was preferred to a fitted characteristic dose because the usable dose
+range differs approximately tenfold between conditions once optically
+compromised frames are excluded, and because stretched exponential fits to
+the full range drove their shape parameter to the imposed bound in every
+DTNB condition and were therefore not converged.
 
 
 % ---------------- RESULTS ----------------
@@ -133,52 +192,62 @@ is independent of the label. In the DTNB soaked crystals, and not in the
 matched controls, this is accompanied by a negative feature spanning
 approximately 370--450 nm and overlapping the TNB band. Integrated over
 395--430 nm, the difference signal at the highest dose analysed reaches
-\(-0.011\) at 5 \% transmission, \(-0.014\) at 25 \%, \(-0.006\) at 50 \% and
-\(-0.025\) at 100 \%, against values of \(+0.006\) to \(+0.031\) in the
-corresponding unlabelled controls (Table \ref{tab:spec_summary}).
+\(-0.022\) at 5 \% transmission, \(-0.008\) at 25 \%, \(-0.014\) at 50 \% and
+\(-0.033\) at 100 \%, against values of \(+0.013\) to \(+0.031\) in the
+unlabelled controls at the three lower dose rates
+(Table \ref{tab:spec_summary}).
 
-The sign of this signal separates the two soak states cleanly at the three
-lower dose rates. Comparing the dose integrated 395--430 nm signal between
-DTNB soaked and matched unlabelled films, all five DTNB positions fall below
-all five control positions at 5 \%, 25 \% and 50 \% transmission, giving the
-smallest attainable exact permutation probability for a five against five
-comparison (\(p = 0.0079\), \(p = 0.032\) after Bonferroni correction for four
-comparisons) with effect sizes of \(d = -1.8\), \(-2.3\) and \(-2.3\)
-respectively. At 100 \% transmission the separation is lost
-(\(p = 0.18\), \(d = -1.0\)): the unlabelled films themselves develop a
-negative feature in this region at the highest dose rate, and the labelled and
-unlabelled distributions overlap. This condition also retains the least data,
-since baseline instability truncated all five positions early, and the loss of
-significance may reflect reduced power rather than a genuine absence of the
-effect. The negative feature should therefore be regarded as label specific at
-the three lower dose rates, and as not separable from the general radiation
-response at the highest.
+The sign of this signal separates the two soak states at every dose rate
+examined. Comparing the dose integrated 395--430 nm signal between DTNB soaked
+and matched unlabelled films, all five DTNB positions fall below all five
+control positions at each of 5 \%, 25 \%, 50 \% and 100 \% transmission,
+giving in every case the smallest attainable exact permutation probability for
+a five against five comparison (\(p = 0.0079\), \(p = 0.032\) after Bonferroni
+correction for four comparisons), with effect sizes of \(d = -1.6\),
+\(-2.5\), \(-2.7\) and \(-1.6\) respectively. Complete separation at all four
+levels is the strongest result the design can return: with five positions per
+group the permutation null contains 252 splits, so no arrangement of these
+data could yield a smaller probability.
+
+Comparison at the two highest dose rates is nevertheless made over a much
+shorter dose range than at the two lowest, since exclusion of optically
+compromised frames leaves only about 2 MGy of usable data at 50 \% and 100 \%
+transmission against 5 and 23 MGy at 5 \% and 25 \%. The separation at high
+dose rate is therefore established over the early part of the response only.
 
 The loss of TNB absorbance is dose dependent (Figure \ref{fig:dose_dependence}).
-A stretched exponential in dose described the 395--430 nm signal better than
-linear, single exponential or biexponential alternatives for every DTNB
-condition, by both information criterion and held out error, improving on the
-linear null by 75 to 252 AIC units. The characteristic dose recovered from
-this fit rises with transmission, from 0.25 MGy at 5 \% through 1.09 MGy at
-25 \% to 3.6--9.2 MGy at the two highest settings; an independent estimate
-obtained by singular value decomposition of the same difference matrices gives
-0.34, 1.50, 3.44 and 4.89 MGy across the same series. The two approaches
-differ in detail, and the bootstrap intervals on the band integration route
-are wide, spanning more than an order of magnitude at 5 \% and 25 \%
-transmission, but both indicate that a larger absorbed dose is required to
-produce the same loss of signal when that dose is delivered more rapidly.
-Such an inverse dose rate dependence is characteristic of a process limited by
-the diffusion or recombination of radiolytic species rather than by the
-absorbed dose alone. It should be noted that the shape parameter of the
-stretched exponential reached its imposed upper bound in all four DTNB
-conditions, so the characteristic doses derived from these fits are
-approximate and should not be quoted as converged estimates.
+Fitted over the first 2 MGy, a window accessible in every condition, the
+initial slope of the 395--430 nm signal against absorbed dose is negative in
+all four DTNB conditions, at \(-0.0025\), \(-0.0071\), \(-0.0036\) and
+\(-0.0055\) per MGy at 5, 25, 50 and 100 \% transmission, and positive in the
+unlabelled controls at the three lower dose rates, at \(+0.0025\),
+\(+0.0020\) and \(+0.0025\) per MGy at 5, 10 and 25 \%. The inversion of sign
+with soak state is the clearest expression of the effect and requires no
+kinetic model. Bootstrap intervals over the five positions exclude zero for
+three of the four DTNB conditions and for all three of these controls; the
+5 \% DTNB interval spans zero narrowly, reflecting the spread between
+positions rather than an absent response, since the same condition separates
+completely from its control by permutation.
+
+That the apo controls at 50 and 100 \% transmission return slopes near or
+below zero (\(+0.0009\) and \(-0.0016\) per MGy) is consistent with the
+optical degradation identified at those dose rates rather than with a
+chemical change, and these two values should not be interpreted as a
+radiation response.
+
+A characteristic dose is not quoted. Stretched exponential fits to the full
+range drove their shape parameter to the imposed bound in every DTNB
+condition, and the usable dose range differs approximately tenfold between
+conditions once optically compromised frames are removed, so whole curve fits
+are poorly conditioned and any characteristic dose derived from them would be
+an artefact of the fitting range rather than a property of the system.
 
 The response at 100 K is markedly attenuated (Figure \ref{fig:rt_vs_cryo}). In
 the single DTNB soaked crystal measured at 100 K the integrated 395--430 nm
-signal remains at \(+0.002\) through two successive X-ray exposures and rises
-only to \(+0.005\) after the third, in contrast to the negative excursion of
-\(-0.011\) to \(-0.025\) reached at room temperature. Only at the final,
+signal remains at \(+0.002\) through two successive X-ray exposures, rises to
+\(+0.005\) after the third and to \(+0.020\) at the fourth and unattenuated
+exposure, in contrast to the negative excursion of \(-0.008\) to \(-0.033\)
+reached at room temperature. Only at the final,
 unattenuated exposure does the cryocooled crystal depart appreciably from its
 starting state. The comparison is necessarily qualitative, since the
 cryocooled measurements were made on single crystals with an exposure index
@@ -190,9 +259,10 @@ Taken together these observations indicate that the TNB moiety is lost from
 the crystal under X-ray irradiation at room temperature, at a rate that is
 slow enough to permit measurements on the order of seconds but fast enough to
 constrain the useful lifetime of the label in a serial experiment. At the
-lowest dose rate examined, half of the total change occurs within
-approximately 0.25 MGy, which is well below the dose accumulated in a typical
-room temperature serial data collection. The rate is, however, many orders of
+lowest dose rate examined the signal falls by approximately 0.0025 absorbance
+units per MGy over the first 2 MGy, so a measurable fraction of the label
+response is lost within the dose accumulated by a typical room temperature
+serial data collection. The rate is, however, many orders of
 magnitude slower than the ultraviolet driven disulphide cleavage that this
 probe is intended to report, which has been observed on femtosecond to
 picosecond timescales in L-cysteine dimers

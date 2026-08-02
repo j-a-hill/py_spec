@@ -85,6 +85,8 @@ def table_condition_summary(results, dose_model) -> pd.DataFrame:
             n_positions=res.n_crystals,
             dose_rate_MGy_per_s=round(dose_model.rate_at(res.condition.transmission_pct), 4),
             max_analysed_dose_MGy=round(res.max_valid_dose_MGy(), 2),
+            mean_onset_s=round(float(np.mean([t.onset_report.time_s for t in res.traces])), 1),
+            n_optically_compromised=int(sum(t.optical_report.compromised for t in res.traces)),
             n_resets_detected=sum(t.reset_report.n_steps for t in res.traces),
             n_positions_truncated=int(sum(t.reset_report.truncated for t in res.traces)),
             tnb_dA_final=round(float(tnb.mean[-1]), 4),
@@ -133,6 +135,10 @@ def table_per_position_qc(results) -> pd.DataFrame:
                 transmission_pct=res.condition.transmission_pct,
                 position=i,
                 file=tr.filename,
+                onset_s=round(tr.onset_report.time_s, 1),
+                onset_detected=tr.onset_report.detected,
+                optically_compromised=tr.optical_report.compromised,
+                max_red_excursion=round(float(tr.optical_report.max_excursion), 4),
                 n_resets=rep.n_steps,
                 n_stitched=int(rep.stitched_frames.size),
                 truncated=rep.truncated,
@@ -145,6 +151,50 @@ def table_per_position_qc(results) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def table_initial_slopes(results, fit_dose_max=2.0, n_boot=2000, seed=0) -> pd.DataFrame:
+    """Initial slope of each band against dose, per condition.
+
+    Fitted over a low-dose window common to every condition.  This replaces
+    the whole-curve characteristic dose used earlier: the stretched
+    exponential drove its shape parameter to the imposed bound in every
+    DTNB condition, and the usable dose range now differs tenfold between
+    conditions, so a slope over a shared window is both better defined and
+    comparable across dose rates.
+    """
+    rng = np.random.default_rng(seed)
+    rows = []
+    for key, res in results.items():
+        dose_max = min(fit_dose_max, res.max_valid_dose_MGy())
+        valid = res.valid() & (res.dose_MGy <= dose_max)
+        dose = res.dose_MGy[valid]
+        for window, label in ((TNB_WINDOW, "TNB_395_430"),
+                              (UV_WINDOW, "UV_300_325")):
+            per = integrate_band(res.wavelength_nm, res.delta_a[:, :, valid], window)
+            slopes = []
+            for row in per:
+                good = np.isfinite(row)
+                slopes.append(np.polyfit(dose[good], row[good], 1)[0]
+                              if good.sum() >= 5 else np.nan)
+            slopes = np.asarray(slopes)
+            finite = slopes[np.isfinite(slopes)]
+            if finite.size > 1:
+                boots = [rng.choice(finite, finite.size, replace=True).mean()
+                         for _ in range(n_boot)]
+                lo, hi = np.percentile(boots, [2.5, 97.5])
+            else:
+                lo = hi = np.nan
+            rows.append(dict(
+                condition=key, soak=res.condition.soak,
+                transmission_pct=res.condition.transmission_pct,
+                band=label, fit_dose_max_MGy=round(dose_max, 2),
+                slope_per_MGy=round(float(np.nanmean(finite)), 5),
+                ci95_lo=round(float(lo), 5), ci95_hi=round(float(hi), 5),
+                n_positions=int(finite.size),
+                excludes_zero=bool(np.isfinite(lo) and (lo > 0) == (hi > 0)),
+            ))
+    return pd.DataFrame(rows)
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", default="config/experiment.toml",
@@ -152,9 +202,6 @@ def main(argv=None) -> int:
     parser.add_argument("--raw-dir", default=None,
                         help="override the raw .asc directory")
     parser.add_argument("--out", default="outputs", help="output directory")
-    parser.add_argument("--cross-validation", default=None,
-                        help="cross-validation CSV for figure 2 panel (c); "
-                             "omit to skip that panel's fitted-dose comparison")
     args = parser.parse_args(argv)
 
     out = Path(args.out)
@@ -184,11 +231,12 @@ def main(argv=None) -> int:
     specificity.to_csv(out / "table_3_label_specificity.csv", index=False)
     qc = table_per_position_qc(results)
     qc.to_csv(out / "table_S1_per_position_qc.csv", index=False)
+    slopes = table_initial_slopes(results)
+    slopes.to_csv(out / "table_4_initial_slopes.csv", index=False)
 
     figure_signature(results, out / "figure_1_dtnb_signature.png")
-    if args.cross_validation:
-        cross = pd.read_csv(args.cross_validation)
-        figure_dose_dependence(results, cross, out / "figure_2_dose_dependence.png")
+    figure_dose_dependence(results, slopes[slopes["band"] == "TNB_395_430"],
+                           out / "figure_2_dose_dependence.png")
     figure_cryo(registry, results, out / "figure_3_rt_vs_cryo.png")
     figure_qc(registry, results, dose_model, out / "figure_S1_quality_control.png")
 

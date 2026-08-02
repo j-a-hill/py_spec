@@ -34,6 +34,8 @@ from .dose import DoseModel, dose_axis
 from .io import Acquisition, read_asc
 from .pipeline import ConditionResult, CrystalTrace, process_condition
 from .registry import Condition, Registry, load_registry
+from .onset import OnsetReport, detect_onset
+from .optical import OpticalReport, check_optical_validity
 from .resets import ResetReport, correct_resets, detect_resets, stitch_resets
 from .scatter import ScatterModel, exponent_sensitivity, fit_scatter, remove_scatter
 
@@ -52,6 +54,10 @@ __all__ = [
     "remove_scatter",
     "exponent_sensitivity",
     "ResetReport",
+    "OnsetReport",
+    "detect_onset",
+    "OpticalReport",
+    "check_optical_validity",
     "detect_resets",
     "stitch_resets",
     "correct_resets",
