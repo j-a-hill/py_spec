@@ -209,9 +209,14 @@ a reduction in one can be traded against an increase in the other at almost no
 cost in residual. Band positions and widths are consequently not identifiable
 from these data, and were held at the literature values of 412 nm for TNB and
 325 nm for DTNB rather than reported as measured in crystallo shifts. Within
-that constraint, inclusion of the TNB and DTNB profiles improved the Bayesian
-information criterion only at 50 and 100 \% transmission, the protein and
-background model being preferred at the two lower dose rates. The residuals of
+that constraint, a model retaining the DTNB depletion profile improved the
+Bayesian information criterion relative to a protein and background model at
+5, 50 and 100 \% transmission, by 10, 52 and 99 units respectively, the null
+being preferred only at 25 \% transmission. A TNB profile introduced without
+the accompanying DTNB profile performed worse than the null at all but the
+highest dose rate, indicating that the depletion of DTNB rather than the
+appearance of TNB carries the explanatory weight in this decomposition. The
+residuals of
 all fits concentrate between 286 and 300 nm, at the blue edge of the measured
 range where the reference set contains no component; this is a genuine
 limitation of describing a crystalline spectrum with solution reference

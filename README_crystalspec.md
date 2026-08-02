@@ -143,12 +143,16 @@ auditable.
   open-access, so both reference bands are idealised Gaussians with assumed
   widths.
 
-  What the route does show is informative. By BIC, adding the TNB and DTNB
-  references earns their parameters only at 50 % and 100 % transmission; at
-  5 % and 25 % the protein-plus-background null is preferred. Residuals
-  concentrate at 286–300 nm, at the blue edge where the reference set has no
-  component — a real gap in the description of the crystalline spectrum
-  rather than a fitting failure.
+  What the route does show is informative. By BIC, a model carrying the
+  DTNB-depletion reference beats the protein-plus-background null at 5 %
+  (ΔBIC +10.1, DTNB-only the best of the four), 50 % (+51.7) and 100 %
+  (+98.7) transmission; the null is preferred only at 25 % (−12.5). A TNB
+  reference *on its own*, without DTNB, is worse than the null everywhere
+  except 100 % transmission — so it is the DTNB-depletion component, not the
+  TNB component, that carries the explanatory power in this decomposition.
+  Residuals concentrate at 286–300 nm, at the blue edge where the reference
+  set has no component — a real gap in the description of the crystalline
+  spectrum rather than a fitting failure.
 
   The two routes that do constrain the answer (band integration and SVD)
   agree on the sign and the presence of the effect, and disagree in detail
