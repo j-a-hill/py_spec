@@ -410,7 +410,11 @@ def figure_dose_dependence(results, cross_validation, out_path,
     quantity the significance test is computed on, so the reader sees the
     five values behind each p.  Panel (c) compares the characteristic dose
     recovered independently by band integration and by singular value
-    decomposition.
+    decomposition.  The two routes agree that the characteristic dose is
+    an order of magnitude larger at the highest dose rates than at 5%
+    transmission, but they do not agree in detail: the band-integration
+    estimate peaks at 50% transmission and falls at 100%, whereas the
+    SVD estimate increases monotonically.
 
     Parameters
     ----------
@@ -525,7 +529,10 @@ def figure_dose_dependence(results, cross_validation, out_path,
     ax_c.set_xticklabels(["5", "25", "50", "100"])
     ax_c.set_xlabel("X-ray transmission (%)")
     ax_c.set_ylabel("Characteristic dose (MGy)")
-    ax_c.set_title("Characteristic dose rises with dose rate")
+    ax_c.annotate("band route non-monotonic\nabove 50% T", xy=(0.97, 0.06),
+                  xycoords="axes fraction", fontsize=5.5, color="0.35",
+                  ha="right", va="bottom")
+    ax_c.set_title("Characteristic dose grows with dose rate")
     ax_c.legend(loc="upper left", fontsize=5.5)
 
     for ax, letter in zip((ax_a, ax_b, ax_c), "abc"):
