@@ -200,6 +200,23 @@ picosecond timescales in L-cysteine dimers
 therefore a background process to be accounted for rather than a competing
 signal on the timescale of an ultrafast pump probe measurement.
 
+A third quantification approach, decomposition of the difference spectra into
+reference profiles for TNB, DTNB and the protein, was attempted as an
+independent check and proved inconclusive for a structural reason. Over the
+fitted region the DTNB depletion profile and the empirical protein growth
+profile are anti correlated with a Pearson coefficient of \(-0.97\), so that
+a reduction in one can be traded against an increase in the other at almost no
+cost in residual. Band positions and widths are consequently not identifiable
+from these data, and were held at the literature values of 412 nm for TNB and
+325 nm for DTNB rather than reported as measured in crystallo shifts. Within
+that constraint, inclusion of the TNB and DTNB profiles improved the Bayesian
+information criterion only at 50 and 100 \% transmission, the protein and
+background model being preferred at the two lower dose rates. The residuals of
+all fits concentrate between 286 and 300 nm, at the blue edge of the measured
+range where the reference set contains no component; this is a genuine
+limitation of describing a crystalline spectrum with solution reference
+profiles rather than a failure of the fitting procedure.
+
 A caveat applies to all of the above. The internal null window at
 470--500 nm, which should remain at zero once the scattering background has
 been removed, instead drifts to between 12 and 29 \% of the co-located TNB

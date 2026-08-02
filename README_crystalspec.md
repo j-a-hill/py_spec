@@ -124,9 +124,32 @@ auditable.
   `scatter.exponent_sensitivity`).
 - **n = 5 positions per condition** is a weak base for the bootstrap. Some
   half-dose confidence intervals span more than an order of magnitude.
-- **A third quantification route was not completed.** Reference-spectrum
-  unmixing was attempted as an independent cross-check but did not finish;
-  the in-house DTNB reference film proved too weak to serve as a reference
-  (2.6 % of the cryo single-crystal difference amplitude) and literature
-  spectra were not retrievable open-access. The two routes that did complete
-  (band integration and SVD) agree.
+- **The third quantification route is inconclusive by construction, not by
+  accident.** Reference-spectrum unmixing was run as an independent
+  cross-check. It produced results, but they do not settle anything, for a
+  reason worth stating: over the fit region the DTNB-depletion reference and
+  the empirical protein-growth reference are anti-correlated at
+  Pearson *r* = −0.97. The linear solver can trade one against the other
+  almost for free, so band shifts and widths are not identifiable — a global
+  fit drove them to the edges of their bounds for a 3 % improvement in
+  residual. Band positions are therefore held at the literature values
+  (TNB 412 nm, DTNB 325 nm) rather than reported as measured in-crystallo
+  shifts.
+
+  Two supporting problems compound it. The in-house DTNB reference film is
+  real but far too weak to anchor the fit (SNR ≈ 31, yet only 2.6 % of the
+  cryo single-crystal difference amplitude at the same nominal chemistry),
+  and digitised literature spectra for DTNB and TNB were not retrievable
+  open-access, so both reference bands are idealised Gaussians with assumed
+  widths.
+
+  What the route does show is informative. By BIC, adding the TNB and DTNB
+  references earns their parameters only at 50 % and 100 % transmission; at
+  5 % and 25 % the protein-plus-background null is preferred. Residuals
+  concentrate at 286–300 nm, at the blue edge where the reference set has no
+  component — a real gap in the description of the crystalline spectrum
+  rather than a fitting failure.
+
+  The two routes that do constrain the answer (band integration and SVD)
+  agree on the sign and the presence of the effect, and disagree in detail
+  on the characteristic dose above 50 % transmission.
