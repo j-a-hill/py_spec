@@ -245,7 +245,8 @@ KNOWN LIMITS
   * Baseline floor ~0.003-0.004 absorbance, measured not assumed: the
     470-500 nm internal zero is not actually zero in DTNB films at the last
     analysed frame (-0.0026 to -0.0039, position SD 0.0013-0.0029).  The
-    TNB-window difference (0.0148-0.0394) is 4-10x above it.
+    TNB-window difference (0.0148-0.0394) is 5.7-12.7x above it, per condition
+    11.1, 12.7, 5.7 and 7.2 at 5, 25, 50 and 100 % transmission.
 
   * The deep UV is throughput-dead below ~280 nm in this configuration (150
     l/mm grating blazed at 300 nm, centred 454 nm, plus EVAL film and mother
