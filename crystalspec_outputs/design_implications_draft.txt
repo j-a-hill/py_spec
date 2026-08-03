@@ -1,0 +1,122 @@
+DESIGN IMPLICATIONS FOR JOINT DIFFRACTION AND SPECTROSCOPY
+(draft prose for the chapter discussion; figure 9 supports it)
+(figure 8 has been withdrawn: figure 9 makes the same argument in two panels)
+
+The measurements reported here were made on thin films carrying many randomly
+oriented microcrystals in mother liquor, and the label-specific signal was
+recovered only as a difference between DTNB-soaked and matched apo film sets.
+It is worth setting out what that implies for a joint experiment in which
+diffraction and absorbance are recorded from the same sample, because the
+constraints are quantitative and they do not all point the same way.
+
+Three separate questions have to be answered, and they have different answers.
+
+The first is whether the label survives a diffraction dataset. It does. The
+label-specific absorbance in the 408-416 nm window falls at 7.5 per cent of the
+label present per MGy at the lowest dose rate examined (0.26 MGy per second),
+6.8 per cent per MGy at 0.52 MGy per second and 3.0 per cent per MGy at 1.04
+MGy per second. Room-temperature crystals of unrelated proteins have reported
+lifetimes between 0.10 and 0.37 MGy (Owen et al., 2012), so a complete
+room-temperature dataset costs between 0.3 and 2.8 per cent of the label. On
+this evidence the spectroscopic probe is not the limiting factor; the crystal
+is. A labelled structure determined at room temperature is a structure of the
+labelled protein, not of a partially stripped one.
+
+The second question is whether the change can be watched on the crystal being
+collected from, and here the answer is no, or at best marginally. The
+label-specific change reaches the measurement noise floor of approximately
+0.004 absorbance units after 0.25 MGy at 25 per cent transmission, 0.53 MGy at
+50 per cent and 0.70 MGy at 100 per cent. Only the first of these is comparable to the
+lifetime reported at a matching collection speed (0.257 MGy for continuous
+collection below 11 Hz), and it sits essentially at that limit rather than
+inside it. In
+wall-clock terms the detection times are 0.95, 1.01 and 0.68 seconds against
+single-crystal lifetimes of 0.37-1.43, 0.19-0.72 and 0.09-0.36 seconds
+respectively. A single room-temperature crystal is destroyed before its label
+signal becomes measurable.
+
+The third question is whether collecting faster resolves this, and the answer
+is that it makes matters worse. Faster collection extends crystal lifetime
+through the inverse dose-rate effect, and that effect is real: the lifetimes
+quoted above rise from 0.186 MGy for stop-start collection to 0.257 MGy for
+continuous collection below 11 Hz and 0.373 MGy at 25 Hz. But the label loss
+per unit dose falls faster than the lifetime rises. Expressed as the ratio of
+detection dose to the lifetime reported at a comparable collection speed, the
+figure of merit is 0.97 at 0.26 MGy per second, 1.76 at 0.52 and 1.89 at 1.04.
+Each ratio uses the lifetime measured at its own collection speed rather than a
+single bound, since the inverse dose-rate effect makes the lifetime itself a
+function of speed; comparing against one fixed lifetime would conceal the
+trade-off. Speed is therefore not the lever. The
+same suppression of damage per unit dose that protects the crystal also
+suppresses the signal the experiment is trying to record, and the two effects
+very nearly cancel.
+
+What does work is signal averaging. Detection dose scales as the noise floor
+divided by the loss rate, and the noise floor of an averaged measurement falls
+as the square root of the number of contributing crystals. Averaging four
+crystals brings the detection dose to 0.125 MGy, ten crystals to 0.079 MGy and
+twenty-five to 0.050 MGy, all comfortably inside a single-crystal lifetime.
+This is the reason the present measurements were made on films rather than
+single crystals, and it should be read as the necessary design rather than a
+compromise: the required sensitivity is only reachable by accumulating
+absorbance across many crystals.
+
+Two practical recommendations follow. First, for the spectroscopic arm the beam
+should be attenuated rather than run at full transmission, since the lower dose
+rate gives a two-and-a-half-fold larger signal per unit dose. This is the
+opposite of the choice that maximises diffraction lifetime, and a joint
+experiment must decide which arm to favour. Second, a serial approach in which
+absorbance is accumulated across many small crystals while diffraction is
+collected from each is better matched to the sensitivity available than an
+attempt to follow the change on one large crystal.
+
+It is worth being precise about the source of the position-to-position variation
+in these measurements, because it is not pathlength. The thin-film sandwich
+geometry fixes the gap: spacers of defined thickness set the separation between
+the two polymer films, and published constructions of this type use spacers of
+10 to 100 micrometres, giving total sandwich thicknesses between 36 and 126
+micrometres (Axford et al., 2016). The
+optical path through the sample is therefore approximately constant across
+positions and between the DTNB and apo film sets. What varies is the material
+occupying that path: the number, size and orientation of microcrystals in the
+probe footprint, and the proportion of the path filled by mother liquor rather
+than crystal. The observed 1.7 to 2.6-fold spread in ground-state label
+absorbance between positions within a single condition is therefore a variable
+crystalline volume fraction in a fixed path, not a variable path. The
+consequence for the analysis is the same in either case, since neither can be
+measured independently here, but the distinction matters for how the experiment
+would be improved: a defined path is already available, and what a large single
+crystal adds is a known and uniform absorber filling it. The alternative route, using
+large single cryo-cooled crystals with a conventional online
+microspectrophotometer, buys the pathlength and the sample stability needed for
+absolute measurements but forfeits the room-temperature chemistry that motivated
+the experiment.
+
+CAVEATS
+
+The diffraction lifetimes used throughout are literature values for three
+unrelated proteins and were not measured on these crystals. Resolution against
+dose from the same chips would replace this bracket with a directly comparable
+number, and until that is available the comparison should be read as
+order-of-magnitude.
+
+The noise floor of 0.004 absorbance units is taken from the internal-zero
+window of these film measurements and includes the mismatch between DTNB and
+apo film sets. A single-crystal measurement in a sealed mount would plausibly
+do better, in which case the detection doses quoted here are pessimistic.
+
+The averaging argument assumes independent noise between crystals. Systematic
+differences in crystal size, orientation and mother-liquor pathlength are not
+independent and will set a floor that no amount of averaging removes; the
+zero-dose offsets observed between matched film sets here, between 0.002 and
+0.008 absorbance units, are a direct measure of that floor in the present
+geometry, and they arise from differing crystalline content rather than differing
+path.
+
+Finally, the claim that the path is fixed rests on the published geometry of
+thin-film sandwich platforms rather than on a measurement made on these chips.
+The absorbance data cannot separate a variable path from a variable crystalline
+volume fraction: at 600-700 nm, where no chromophore absorbs, the
+position-to-position spread correlates with the label-band spread at r = 0.53 to
+0.99, which is what either explanation predicts. The geometric argument, not this
+correlation, is the reason for preferring the fixed-path interpretation.

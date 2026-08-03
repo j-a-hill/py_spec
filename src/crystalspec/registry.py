@@ -100,6 +100,20 @@ class Registry:
         got = [c for c in self.conditions.values() if c.soak == soak]
         return sorted(got, key=lambda c: c.transmission_pct)
 
+    def buffer_acquisitions(self, static: str = "buffer_RT.asc",
+                            irradiated: str = "buffer_RT_xrays.asc"):
+        """Return ``(static, irradiated)`` mother-liquor acquisitions, or ``None``.
+
+        These are the blank/reference acquisitions taken at the beamline rather
+        than per-condition measurements, so they are not in the condition table.
+        Returns ``None`` when either file is absent so a caller can skip the
+        control figure rather than fail.
+        """
+        paths = [self.raw_dir / static, self.raw_dir / irradiated]
+        if not all(p.exists() for p in paths):
+            return None
+        return tuple(read_asc(p) for p in paths)
+
     def matched_pairs(self) -> list[tuple[Condition, Condition]]:
         """(DTNB, apo) condition pairs sharing a transmission level."""
         apo = {c.transmission_pct: c for c in self.by_soak("apo")}

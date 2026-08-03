@@ -123,17 +123,40 @@ auditable.
 
 ## Outputs
 
+Six figures.  Each answers one question and none is redundant with another; the
+story document ties each to the claim it supports.
+
 | File | Contents |
 |---|---|
-| `figure_1_dtnb_signature.png` | DTNB-specific difference signature against matched apo controls |
-| `figure_2_dose_dependence.png` | TNB signal against dose, per-position test statistic, initial slope |
-| `figure_3_rt_vs_cryo.png` | room-temperature film ensemble against 100 K single crystals |
+| `figure_1_spectra_and_traces.png` | difference spectra at sampled doses, plus 350 and 412 nm against dose, both arms |
+| `figure_2_diagnostic_wavelengths.png` | absorbance at fixed literature wavelengths (310, 328, 400, 412, 480, 580 nm) against dose |
+| `figure_3_experiment_design.png` | dose budget: detection dose against room-temperature crystal lifetime |
+| `figure_4_rt_vs_cryo.png` | room-temperature films against 100 K single crystals |
 | `figure_S1_quality_control.png` | scatter correction, reset handling, usable window per position |
+| `figure_S2_buffer_controls.png` | mother-liquor blank and irradiated-liquor control |
+| `minimal_set_story.txt` | the four claims, which figure supports each, and what was deliberately cut |
 | `table_1_condition_summary.csv` | per condition: exposure, QC counts, endpoint band values |
-| `table_2_cross_validation.csv` | band integration against SVD, both quantification routes |
-| `table_4_initial_slopes.csv` | initial slope of each band against dose, with bootstrap intervals |
 | `table_3_label_specificity.csv` | DTNB against apo, exact permutation test per level |
+| `table_4_initial_slopes.csv` | initial slope of each band against dose, with bootstrap intervals |
+| `table_12_diagnostic_wavelengths.csv` | DTNB-minus-apo difference and initial slope at each diagnostic wavelength |
+| `table_13_exponential_fits_D90.csv` | single-exponential fits and D90 per wavelength and condition |
+| `table_14_label_budget.csv` | fraction of label lost by dose, per condition |
+| `table_15_dose_budget.csv` | detection dose against published room-temperature lifetimes |
+| `table_6_references.csv` | the 22 verified literature sources, DOIs checked |
 | `table_S1_per_position_qc.csv` | per position: resets, stitching, truncation, usable window |
+| `methods_and_results_draft.txt` | thesis-style methods and results prose |
+
+`figures.py` contains seven further figure functions built during the analysis
+but not wired into `run.py`.  They are not regenerated because each is either
+superseded by one of the six above or reports a result that was withdrawn; the
+reasons are recorded in `minimal_set_story.txt` so they do not have to be
+rediscovered.  Their last rendered output is kept under `superseded/`.
+
+Two position counts appear in the outputs and are not interchangeable: the
+permutation test uses all five positions per arm on an area-under-curve
+statistic, while dose-resolved traces hold the contributing set fixed at the
+three longest-surviving positions so a position dropping out mid-series cannot
+create a step in the mean.
 
 ## Known limitations
 

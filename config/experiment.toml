@@ -9,7 +9,7 @@
 # its name: the beamline naming is inconsistent (see registry.py) and an
 # explicit table is auditable.
 
-raw_dir = "../HGD_nanospec/mx29074-47"
+raw_dir = "../../data_raw/HGD_nanospec/mx29074-47"
 
 # --------------------------------------------------------------------------
 # Dose model

@@ -1,0 +1,256 @@
+MINIMAL SET: figures, code and story
+in-crystallo UV-vis of R37S HGD films, DTNB-labelled vs apo
+
+Written to accompany crystalspec v0.1.0.  Everything below regenerates from
+one command:
+
+    cd crystalspec
+    PYTHONPATH=src python -m crystalspec.run \
+        --config config/experiment.toml --out outputs
+
+
+================================================================
+THE STORY, IN FOUR CLAIMS
+================================================================
+
+Claim 1.  X-rays remove the DTNB label from the crystal, and the effect is
+          specific to the label.
+
+    At every one of the four transmission settings the DTNB-soaked films lose
+    absorbance in the 395-430 nm TNB window while their matched apo controls do
+    not.  The five film positions in each arm separate completely by soak state
+    at all four settings (exact permutation p = 0.0079, the 5-vs-5 floor over
+    252 splits; Cohen's d = -1.63, -2.45, -2.69, -1.56 at 5, 25, 50 and 100 %
+    transmission).
+
+    The result rests on the SIGN being consistent within each arm, not on the
+    amplitudes being reproducible.  Taking the endpoint TNB-window difference
+    over the three positions that survive longest in each arm, the
+    position-to-position SD within the DTNB arm (0.0102-0.0288) is comparable to
+    the DTNB-minus-apo difference itself (0.0148-0.0394), because the
+    crystalline volume fraction in the probed footprint varies between
+    positions.  It is the direction of change that is identical across positions
+    and opposite between arms.
+
+    Two position counts appear in the outputs and mean different things: the
+    permutation test in TABLE 3 uses all five positions per arm on an
+    area-under-curve statistic over the common dose range (hence the 0.0079
+    floor over 252 splits), while dose-resolved traces and endpoint differences
+    hold the contributing set fixed at the three longest-surviving positions, so
+    that a position dropping out mid-series cannot create a step in the mean.
+
+    FIGURE 1, panel (d).  TABLE 3.
+
+Claim 2.  The label loss saturates in the first couple of MGy; the protein
+          damage it sits on does not.
+
+    Fitting A = A0 + B exp(-D / d1) at fixed diagnostic wavelengths gives, for
+    the 412 nm loss, D90 = 5.0, 1.3, 1.6 and 2.4 MGy at 5, 25, 50 and 100 %
+    transmission -- against 25 MGy of usable dose at 25 %.  The label-specific
+    chemistry is essentially finished while the experiment is still running,
+    which is what a finite accessible pool of mixed disulphide being consumed
+    looks like.
+
+    The 310 and 328 nm growth behaves the opposite way: D90 there falls at
+    73-94 % of the measured dose range in every long condition, i.e. nothing
+    has saturated and the fitted d1 (> 6 MGy) is a LOWER BOUND set by where the
+    film failed optically, not a property of the chemistry.  For contrast,
+    Sutton et al. (2013) report D90 at 400 nm averaging 0.51-0.77 MGy in
+    lysozyme, thirty times earlier than our cutoff.
+
+    FIGURE 2, panels (b) and (c).  TABLES 12 and 13.
+
+Claim 3.  A joint diffraction-plus-spectroscopy experiment is feasible, but
+          only just, and only at low dose rate.
+
+    The dose needed to detect the label loss above the measured baseline floor
+    is 0.25, 0.53 and 0.71 MGy at 25, 50 and 100 % transmission.  Each is
+    divided by the room-temperature diffraction lifetime reported at a
+    COMPARABLE collection speed (0.257, 0.300, 0.373 MGy respectively) rather
+    than by one fixed value -- the inverse dose-rate effect makes the lifetime
+    itself depend on how fast the dose is delivered, and a single denominator
+    would hide the trade-off.  The resulting ratios are 0.97 at 25 % but 1.76
+    and 1.89 at 50 and 100 %.  Only the lowest dose rate is inside the budget on
+    a single crystal; averaging four positions brings the ratio to ~0.5 and
+    twenty-five to ~0.2.
+
+    Note that TABLE 15 tabulates the same detection doses against six FIXED
+    published lifetimes (0.097-0.373 MGy, Owen et al. 2012) to show the spread;
+    its ratio columns are therefore not the same quantity as panel (b) and are
+    larger for the two fast conditions.
+
+    The practical reading: watching the label leave during a diffraction
+    experiment is doable, but it has to be fast and it wants large single
+    crystals, not the multi-position film geometry used here.
+
+    FIGURE 3.  TABLES 14 and 15.
+
+Claim 4.  At 100 K the label survives; at room temperature it does not.
+
+    The same TNB-window measure on single cryo-cooled crystals shows no loss
+    across four sequential X-ray exposures, while the matched room-temperature
+    film endpoint sits at -0.022.  This is the expected temperature dependence
+    of specific radiation damage and is the reason the online-spectroscopy
+    experiment in Claim 3 is proposed on cryo-cooled crystals.
+
+    The two datasets are NOT directly commensurable -- different sample format
+    (single crystals vs multi-position films), different absolute dose, n = 1
+    DTNB crystal.  The figure is built to make that visible rather than to hide
+    it.
+
+    FIGURE 4.
+
+
+================================================================
+THE MINIMAL FIGURE SET
+================================================================
+
+Four main figures and two supplementary.  Each answers one question; none is
+redundant with another.
+
+  Figure 1   figure_1_spectra_and_traces.png
+             Difference spectra at sampled doses (a, b) and absorbance at 350
+             and 412 nm against dose (c, d), DTNB and apo arms.  This is the
+             original py_spec figure idiom, corrected: dark-referenced,
+             scatter-removed, reset-repaired, contributing position set held
+             fixed, and the apo control overlaid on the same axes.
+             -> Claim 1.  Also the figure that shows the raw shape of the data.
+
+  Figure 2   figure_2_diagnostic_wavelengths.png
+             The standard microspectrophotometry presentation (Weik et al.
+             2002; Sutton et al. 2013): absorbance read at FIXED literature
+             wavelengths -- 310, 328, 400, 412, 480, 580 nm -- against absorbed
+             dose, per arm, plus the DTNB-minus-apo difference at each.  No band
+             centre is a free parameter.
+             -> Claims 1 and 2.
+
+  Figure 3   figure_3_experiment_design.png
+             The dose budget: label-specific change against dose over the first
+             MGy with the crystal lifetime marked (a), and detection dose
+             divided by crystal lifetime against dose rate (b).
+             -> Claim 3.
+
+  Figure 4   figure_4_rt_vs_cryo.png
+             100 K single crystals against room-temperature films.
+             -> Claim 4.
+
+  Figure S1  figure_S1_quality_control.png
+             The two corrections the analysis depends on -- power-law scatter
+             removal and reset repair -- and the usable window for every film
+             position.  Anyone who doubts a correction should be able to see it
+             here.
+
+  Figure S2  figure_S2_buffer_controls.png
+             Mother-liquor controls.  The liquor carries 20-27 % of the raw
+             absorbance (hence dark referencing), and irradiated liquor
+             produces no signal of its own: within a 0.0022 span at 300-325 nm
+             and 0.0006 at 395-430 nm over 26 s, while a film has moved +0.115
+             and -0.026 in the same windows and time.
+
+
+================================================================
+WHAT IS DELIBERATELY NOT IN THE SET
+================================================================
+
+Thirteen figures built during the analysis are not regenerated.  They are kept
+under crystalspec/superseded/ for the record.  Reasons, so none of this has to
+be rediscovered:
+
+  Band-position fitting (former figures 4, S2; tables 5, 8, 9, 10, 11).
+     A -6 to -8 nm DTNB-minus-apo shift in the 310 nm growth band was WITHDRAWN.
+     It was an artefact of fitting into a truncated, noisy blue flank: noise
+     rises 48-fold from the internal-zero window into 285-300 nm, and the
+     fitted shift collapses from -8.1 to -1.4 nm as the fit window start moves
+     292 -> 304 nm.  The dihedral-angle interpretation built on it goes with it.
+
+  Kinetic rate constants (former figure 5).
+     A biphasic loss is a real finding, but the RATES are not determined:
+     bootstrapped over film positions k spans [0.02, 14.9] per MGy at 5 %
+     transmission, two orders of magnitude.  Figure 2's exponential D90 is the
+     defensible summary of the same information.
+
+  Species assignment (former figure 4, table 7).
+     The dominant feature is a POSITIVE band at 307-314 nm that grows in BOTH
+     arms, 2.8-7.0x larger than the label loss (TABLE 14, growth_to_loss_ratio).  It is protein radiation
+     chemistry, not the label, and no species is named for it without a matched
+     reference spectrum.  It also sits on 328 nm, which is why the
+     protein-S-S-TNB mixed disulphide cannot be isolated: the DTNB-specific
+     difference at 328 nm flips sign across transmission
+     (+0.0008, -0.0584, +0.0088, +0.0129) and no level's bootstrap excludes
+     zero, whereas at 412 nm all four are negative
+     (-0.0266, -0.0415, -0.0174, -0.0199) and all four exclude zero.
+
+  Shoulder / isosbestic diagnostics (former figure S4).
+     An isosbestic point is ruled out -- the raw zero crossing spans 382-546 nm
+     over the series rather than staying put.  A shoulder at 415-455 nm is
+     NEITHER demonstrated NOR excluded: the apparent curvature minimum falls at
+     445 nm in DTNB, apo and mother liquor alike, against a 454 nm spectrograph
+     centre, and a within-arm split null gives p = 0.06-0.14 depending on the
+     smoothing window.  Conclusion recorded here; figure not needed.
+
+  Time-axis variant (former figure 10b).
+     Retained as a code path (figure_original_idiom(..., xaxis="time")) rather
+             than a figure.  Worth knowing: the loss superimposes BETTER on
+     elapsed time (spread 1.74-2.73x) than on absorbed dose (2.60-4.49x) across
+     a twentyfold dose-rate range, which is the inverse dose-rate signature and
+     has direct precedent (Owen et al. 2012).
+
+
+================================================================
+THE CODE
+================================================================
+
+crystalspec/
+  config/experiment.toml     file -> condition mapping, declared explicitly so
+                             the association is auditable; analysis windows
+  src/crystalspec/
+    io.py          Andor .asc reader -> Acquisition (1600 wavelengths x N frames)
+    registry.py    condition table, matched pairs, buffer acquisitions
+    dose.py        transmission -> absorbed dose, from RADDOSE-3D
+    onset.py       shutter-opening detection (scans seven bands; the shutter was
+                   pressed by hand, so dose must be zeroed at the detected onset)
+    optical.py     rejects frames where the film has gone optically bad
+    resets.py      spectrometer reset detection and stitching
+    scatter.py     power-law (lambda^-3) scatter removal
+    pipeline.py    read -> resets -> onset -> dark reference -> optical check ->
+                   scatter removal.  ORDER MATTERS: the optical check runs
+                   BEFORE scatter removal, because the power-law fit would
+                   otherwise absorb the broadband offset that signals damage.
+    quantify.py    band integration, slopes, permutation tests, bootstraps
+    figures.py     all figure functions; only six are wired into run.py
+    style.py       palette and sizing.  Warm = DTNB, cool = apo.
+    run.py         the one command
+
+Four modules exist because of things that turned out to be wrong in the first
+pass and are worth not repeating: onset.py (the shutter is not synchronised),
+optical.py (films fail before the acquisition ends), resets.py (the
+spectrometer was re-zeroed mid-run), scatter.py (scattering varies severalfold
+between positions and dominates the raw spectra).
+
+
+================================================================
+KNOWN LIMITS
+================================================================
+
+  * No absolute quantitation.  The crystalline volume fraction in the beam is
+    unknown and varies between positions, so no amplitude converts to a
+    concentration or an occupancy.  Only relative measures are reported.
+
+  * Absorbed dose is an estimate.  The shutter was operated by hand; the
+    detected onset is an UPPER BOUND on the true shutter time.  RADDOSE-3D was
+    run for a 50 x 50 um top-hat beam at 5e12 photons/s, while the chapter
+    quotes 20 x 20 um at 8e12 -- this discrepancy is unresolved and is flagged
+    in the methods draft.
+
+  * Baseline floor ~0.003-0.004 absorbance, measured not assumed: the
+    470-500 nm internal zero is not actually zero in DTNB films at the last
+    analysed frame (-0.0026 to -0.0039, position SD 0.0013-0.0029).  The
+    TNB-window difference (0.0148-0.0394) is 4-10x above it.
+
+  * The deep UV is throughput-dead below ~280 nm in this configuration (150
+    l/mm grating blazed at 300 nm, centred 454 nm, plus EVAL film and mother
+    liquor), so the disulphide absorption itself was never reached.  This is a
+    configuration limit, not a limit of the method.
+
+  * 100 % transmission rests on 2.08 MGy of usable data against 23.34 MGy at
+    25 %; treat it as corroborating, not as an independent replicate.

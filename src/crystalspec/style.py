@@ -30,7 +30,10 @@ __all__ = [
 ]
 
 #: Soak state -> colour.
-SOAK = {"DTNB": "#1b3a6b", "apo": "#c04a1e"}
+# DTNB and its TNB product are the yellow-orange chromophores, so the warm
+# colour is bound to the DTNB arm and the cool colour to the unlabelled control.
+# Changing this dict reassigns the colours everywhere; no figure hardcodes them.
+SOAK = {"DTNB": "#c04a1e", "apo": "#1b3a6b"}
 #: Soak state -> figure label.
 SOAK_LABEL = {"DTNB": "DTNB-soaked", "apo": "apo (no DTNB)"}
 #: Nominal X-ray transmission (%) -> colour, dark = higher dose rate.

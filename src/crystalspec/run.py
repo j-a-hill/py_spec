@@ -18,10 +18,12 @@ import pandas as pd
 
 from .dose import DoseModel
 from .figures import (
+    figure_buffer_controls,
     figure_cryo,
-    figure_dose_dependence,
+    figure_diagnostic_wavelengths,
+    figure_experiment_design,
+    figure_original_idiom,
     figure_qc,
-    figure_signature,
 )
 from .pipeline import process_condition
 from .quantify import band_series, integrate_band
@@ -234,11 +236,22 @@ def main(argv=None) -> int:
     slopes = table_initial_slopes(results)
     slopes.to_csv(out / "table_4_initial_slopes.csv", index=False)
 
-    figure_signature(results, out / "figure_1_dtnb_signature.png")
-    figure_dose_dependence(results, slopes[slopes["band"] == "TNB_395_430"],
-                           out / "figure_2_dose_dependence.png")
-    figure_cryo(registry, results, out / "figure_3_rt_vs_cryo.png")
+    # The minimal figure set.  Every figure here answers one question that the
+    # chapter needs; the exploratory figures built during the analysis are not
+    # regenerated because each is either superseded by one of these or is a
+    # diagnostic whose conclusion is now stated in the methods text.
+    figure_original_idiom(results, out / "figure_1_spectra_and_traces.png")
+    figure_diagnostic_wavelengths(results, out / "figure_2_diagnostic_wavelengths.png")
+    figure_experiment_design(results, out / "figure_3_experiment_design.png")
+    figure_cryo(registry, results, out / "figure_4_rt_vs_cryo.png")
+
     figure_qc(registry, results, dose_model, out / "figure_S1_quality_control.png")
+    buffers = registry.buffer_acquisitions()
+    if buffers is not None:
+        figure_buffer_controls(results, *buffers,
+                               out / "figure_S2_buffer_controls.png")
+    else:
+        print("  note: buffer acquisitions not found; skipping figure S2")
 
     print(f"\nWrote figures and tables to {out.resolve()}")
     return 0
