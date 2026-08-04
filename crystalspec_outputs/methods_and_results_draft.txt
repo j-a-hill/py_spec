@@ -299,14 +299,19 @@ the measurement, \(1 - \exp(-D_{\mathrm{max}}/d_{1})\), which is 0.999, 0.996
 and 0.998 at the three lower settings but 0.140 at 100 \%. Profiling the
 characteristic dose at that setting, with the remaining parameters refitted at
 each value, moves \(R^{2}\) only from 0.746 to 0.755 as \(d_{1}\) rises from
-10 to 200 MGy, and resampling the film positions places \(d_{1}\) anywhere
-between 0.16 and 200 MGy. Fits
+10 to 200 MGy, so the estimate is set by the fitting bounds rather than by the
+data: widening the amplitude bounds alone, at identical dose grid and starting
+guess, moves \(d_{1}\) from 13.8 MGy to the 200 MGy ceiling. Resampling the
+film positions places \(d_{1}\) anywhere between 0.16 and 200 MGy. Fits
 traversing less than half of their modelled decay are flagged as lower bounds
 throughout, and no fitted curve is drawn for them.
 
 A second exponential improves the description of every trace, raising
-\(R^{2}\) to 0.993 or above and lowering the Akaike information criterion by
-several hundred, but it was not adopted. Bootstrapped over film positions the
+\(R^{2}\) to 0.993 or above at the three settings where the first rate is
+determined and lowering the Akaike information criterion there by 432 to 1535,
+but it was not adopted. At 100 \% transmission it adds almost nothing
+(\(R^{2}\) 0.755 to 0.762, \(\Delta\)AIC 11.5), which is what a second rate
+should do where the first is already unconstrained. Bootstrapped over film positions the
 slow component is unconstrained, spanning 0.46 to 200 MGy at 5 \% transmission
 and reaching the fitting bound in three resamples in ten. The gain is in
 describing a single realisation rather than in estimating a second rate that

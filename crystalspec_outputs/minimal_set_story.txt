@@ -63,18 +63,23 @@ Claim 2.  The label loss saturates in the first couple of MGy; the protein
     complete within the data.  At 100 % it is 0.140.  The likelihood is
     correspondingly flat: profiling d1 with the other two parameters refitted
     at each value gives R2 = 0.7456, 0.7485, 0.7518, 0.7539 and 0.7554 at
-    d1 = 10, 13.8, 25, 50 and 200 MGy -- five thousandths of R2 across a
-    twentyfold change in the rate.  Two implementations differing only in
-    their dose grid land on d1 = 13.8 and d1 = 200 (the fitting bound), and
-    resampling the five film positions puts d1 anywhere in [0.16, 200] MGy
-    with 20 % of resamples at the bound.  The
+    d1 = 10, 13.8, 25, 50 and 200 MGy -- one hundredth of R2 across a
+    twentyfold change in the rate.  The consequence is that the estimate is
+    decided by the fitting bounds rather than by the data: on the same dose
+    grid and the same starting guess, amplitude bounds scaled to the data
+    range return d1 = 13.8 MGy while bounds fourteen times wider return
+    d1 = 200 (the ceiling), at R2 0.7485 and 0.7554.  Resampling the five film
+    positions puts d1 anywhere in [0.16, 200] MGy with 20 % of resamples at
+    the ceiling.  The
     package therefore flags any fit with decay_observed_frac < 0.5 as a lower
     bound (crystalspec.quantify.DECAY_OBSERVED_MIN) and figure 2 draws no curve
     for it.
 
-    A second exponential raises R2 at every setting (0.953 -> 0.996 at 5 %,
-    0.919 -> 0.993 at 25 %, 0.986 -> 0.993 at 50 %) and AIC prefers it by a
-    wide margin, but it is NOT adopted: bootstrapped over film positions the
+    A second exponential raises R2 at the three settings where the single
+    exponential is determined (0.953 -> 0.996 at 5 %, 0.919 -> 0.993 at 25 %,
+    0.986 -> 0.993 at 50 %) and AIC prefers it there by 432 to 1535.  At 100 %
+    it buys almost nothing (0.755 -> 0.762, dAIC +11.5), as expected where the
+    first rate is already unidentifiable.  It is NOT adopted: bootstrapped over film positions the
     slow component spans [0.46, 200] MGy at 5 % and sits at its bound in 30 % of
     resamples.  The improvement is in describing one realisation of the data,
     not in estimating a second rate that replicates.  One exponential per
