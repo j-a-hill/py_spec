@@ -1394,12 +1394,18 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
             continue
         step = max(1, int(g.size / 200))
         fit = fit_single_exponential(g, diff, falling_segment_only=False)
+        # Report every converged fit with its R2 rather than hiding the weaker
+        # ones: suppressing the 100 % entry (R2 0.75) left the figure silently
+        # short of a value the text quotes.  The reader weighs the quality.
+        ok_fit = (np.isfinite(fit["R2_single"]) and np.isfinite(fit["D90_MGy"])
+                  and not fit["D90_is_lower_bound"])
         lab = f"{T}%"
-        if np.isfinite(fit["R2_single"]) and fit["R2_single"] > 0.8:
-            lab = f"{T}%, $D_{{90}}$ {fit['D90_MGy']:.1f} MGy"
+        if ok_fit:
+            lab = (f"{T}%, $D_{{90}}$ {fit['D90_MGy']:.1f} MGy"
+                   f" ($R^2$ {fit['R2_single']:.2f})")
         ax_c.plot(g[step // 2::step], diff[step // 2::step],
                   color=TRANSMISSION[T], lw=1.0, label=lab)
-        if np.isfinite(fit["R2_single"]) and fit["R2_single"] > 0.8:
+        if ok_fit:
             try:
                 popt, _ = curve_fit(
                     expo, g, diff,
@@ -1420,7 +1426,7 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
     # Below the axes: at this panel size every in-axes corner is occupied by
     # a trace, and four entries with fitted values are too wide to inset.
     ax_c.legend(loc="upper center", bbox_to_anchor=(0.5, -0.30), ncol=2,
-                fontsize=4.8, framealpha=0.0,
+                fontsize=4.4, framealpha=0.0,
                 title="transmission (dashed: fitted decay)",
                 title_fontsize=4.8, handlelength=1.4, labelspacing=0.22,
                 columnspacing=1.0, borderpad=0.2)
