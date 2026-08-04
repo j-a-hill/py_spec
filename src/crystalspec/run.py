@@ -33,6 +33,12 @@ from .quantify import (
     table_dose_budget,
     table_exponential_fits,
 )
+from .viability import (
+    figure_v1_signal_is_real,
+    figure_v2_verdict,
+    figure_v3_what_else_changes,
+    table_viability,
+)
 from .registry import load_registry
 from .style import apply_style
 
@@ -260,6 +266,18 @@ def main(argv=None) -> int:
     figure_diagnostic_wavelengths(results, out / "figure_2_diagnostic_wavelengths.png")
     figure_experiment_design(results, out / "figure_3_experiment_design.png")
     figure_cryo(registry, results, out / "figure_4_rt_vs_cryo.png")
+
+    # The viability set: three figures and one table that answer only
+    # "could a joint diffraction/spectroscopy experiment work?".  They reuse
+    # the dose budget computed above rather than re-deriving anything, so they
+    # cannot drift from table 10.
+    budget_rows = budget.to_dict("records")
+    figure_v1_signal_is_real(results, PAIRS, registry,
+                             out / "figure_V1_signal_is_real.png")
+    figure_v2_verdict(budget_rows, out / "figure_V2_verdict.png")
+    figure_v3_what_else_changes(results, PAIRS,
+                                out / "figure_V3_what_else_changes.png")
+    table_viability(results, PAIRS, budget_rows, out / "table_V1_viability.csv")
 
     figure_qc(registry, results, dose_model, out / "figure_S1_quality_control.png")
     buffers = registry.buffer_acquisitions()

@@ -1,0 +1,99 @@
+IS A DTNB-PROBED DIFFRACTION / SPECTROSCOPY EXPERIMENT VIABLE?
+
+Short answer: yes at low dose rate, no at full beam, and the limit is the
+protein's own radiation chemistry rather than the spectrometer.
+
+--------------------------------------------------------------------------
+THE THREE THINGS THAT HAD TO BE TRUE
+--------------------------------------------------------------------------
+
+1. THE LABEL SIGNAL IS REAL AND X-RAY DRIVEN            [figure V1]
+
+   The TNB label absorbs at 412 nm.  Under irradiation that absorbance falls,
+   in every condition, in DTNB-soaked films but not in matched unlabelled
+   controls.  A DTNB-soaked film with the shutter CLOSED, processed
+   identically, changes by 0.0040 or less over
+   the same interval -- i.e. nothing happens without X-rays.
+
+   At a matched 2.9 s the four irradiated conditions have lost 0.017 to 0.028
+   absorbance units against a baseline noise of 0.004.
+   That is a factor of 4 to 7 above the floor.
+
+2. IT IS DETECTABLE INSIDE A CRYSTAL'S LIFETIME         [figure V2]
+
+   The number that matters is the dose needed for the label change to clear
+   the measured baseline noise, compared against how much dose a
+   room-temperature crystal survives.  Published RT diffraction lifetimes for
+   comparable systems span 0.10 to 0.37 MGy (Owen et al. 2012).
+
+   transmission   dose rate     detection dose   fraction of crystal lifetime
+      5 %        0.052 MGy/s    0.025 MGy      0.07 - 0.25   VIABLE
+     25 %        0.260 MGy/s    0.058 MGy      0.16 - 0.60   VIABLE
+     50 %        0.521 MGy/s    0.088 MGy      0.23 - 0.90   VIABLE
+    100 %        1.042 MGy/s    0.243 MGy      0.65 - 2.50   needs averaging
+
+   Below 1 the label change is measurable before the crystal loses its
+   diffraction.  Three of four transmission levels are under 1 across every
+   published lifetime.  Only full beam is not, and there the fix is averaging
+   over several crystals rather than a different technique.
+
+   The trend is the useful part: SLOWER delivery is better.  Detection dose
+   rises almost fivefold from 5 % to 100 % transmission
+   (0.025 to 0.243 MGy)
+   because faster irradiation destroys the label before enough spectra
+   accumulate.
+
+3. THE CONTRAST LIMIT IS UNDERSTOOD                     [figure V3]
+
+   The protein itself develops a strong absorption band near 310 nm under
+   irradiation, in BOTH arms.  It is 2.1 to 2.9 times larger
+   than the label loss, and it overlies 328 nm where the intact
+   protein-S-S-TNB adduct absorbs.
+
+   Two consequences for experiment design:
+     * The intact adduct cannot be followed.  Its band is buried.
+     * The label must be read at 412 nm AS A DIFFERENCE against a matched
+       unlabelled control, because the 310 nm band's red tail reaches into
+       the 412 nm window and partially cancels the loss.
+
+--------------------------------------------------------------------------
+WHAT THIS SUPPORTS SAYING
+--------------------------------------------------------------------------
+
+  "Loss of a DTNB label from an HGD crystal is spectroscopically detectable
+   at 412 nm within the dose a room-temperature crystal survives, provided
+   the dose is delivered slowly.  At 0.052 MGy/s the change clears the
+   measured noise floor by 0.025 MGy, 0.07 to 0.25 of the published
+   diffraction lifetime.  A joint diffraction / spectroscopy measurement is
+   therefore feasible in principle, but it must be fast, it must be read as a
+   difference against an unlabelled control, and the dominant spectral change
+   is the protein's own radiation chemistry rather than the label."
+
+--------------------------------------------------------------------------
+WHAT THIS DOES NOT SUPPORT SAYING
+--------------------------------------------------------------------------
+
+  * No concentration or occupancy.  These are films of randomly oriented
+    crystals plus mother liquor; the crystalline volume fraction is unknown
+    and varies severalfold between positions.  Only relative changes mean
+    anything.
+  * No mechanism.  Whether the label is destroyed in place or released and
+    diffuses out of the probed volume cannot be distinguished here.
+  * No rate constant.  A fitted decay constant on these traces grows 1.4 to
+    2.5 times depending on the dose window chosen, so the decay is not a
+    single exponential and any single quoted rate would be an artefact of the
+    window.
+  * Nothing about the RT multicrystal geometry as a spectroscopy platform.
+    These are thin films, not the single large crystals online spectroscopy
+    would need.
+
+--------------------------------------------------------------------------
+HOW TO REGENERATE
+--------------------------------------------------------------------------
+
+  PYTHONPATH=crystalspec/src python -m crystalspec.run \
+      --config crystalspec/config/experiment.toml --out crystalspec/outputs/
+
+  Figures V1-V3 and table_V1_viability.csv come from crystalspec/viability.py,
+  which reads the dose budget the main pipeline computes and does not re-derive
+  any quantity independently.
