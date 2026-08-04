@@ -11,7 +11,13 @@ diffraction lifetimes) or from the processed traces in the pipeline result.
 WHAT THE THREE FIGURES SHOW
 
 V1  The signal is real and needs X-rays.  The label band at 412 nm falls under
-    irradiation and does not move in a soaked film with the shutter closed.
+    irradiation; over the same interval a soaked film with the shutter closed
+    stays inside the baseline noise (-0.0016 at 20 s against a 0.004 floor).
+    The control is NOT flat over its full 100 s record -- it drifts to -0.027,
+    a peak-to-peak excursion of 0.028, roughly 7x the noise floor and
+    comparable to the label loss itself.  That drift is why the comparison is
+    bounded at t_max_s and read at a matched time: the control is evidence
+    only on the timescale the irradiated films are analysed over.
 
 V2  The verdict.  Detection dose against published room-temperature
     diffraction lifetimes, for each dose rate.  Below the diagonal the label
@@ -105,11 +111,19 @@ def _no_xray_control(registry):
 
 
 def figure_v1_signal_is_real(results, pairs, registry, out_path, t_max_s=20.0):
-    """V1: the label band falls under X-rays and does not move without them.
+    """V1: the label band falls under X-rays; without them it stays in the noise.
 
     Plotted against TIME, not dose, because the control has no dose axis --
     the shutter was never opened.  t_max_s bounds the panel at the point where
     the fastest condition has run out of usable frames.
+
+    t_max_s is load-bearing, not cosmetic.  The no-X-ray control is flat only
+    over the first ~20 s; by 100 s it has drifted to -0.027, which is
+    comparable to the label loss.  Extending this panel to the control's full
+    record would show a 'control' with an excursion as large as the effect.
+    The defensible statement is therefore bounded: over the interval the
+    irradiated films are analysed, the unirradiated film stays within the
+    baseline noise while the irradiated ones fall 4-7x below it.
     """
     import matplotlib.pyplot as plt
 

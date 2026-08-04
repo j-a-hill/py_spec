@@ -12,8 +12,18 @@ THE THREE THINGS THAT HAD TO BE TRUE
    The TNB label absorbs at 412 nm.  Under irradiation that absorbance falls,
    in every condition, in DTNB-soaked films but not in matched unlabelled
    controls.  A DTNB-soaked film with the shutter CLOSED, processed
-   identically, changes by 0.0040 or less over
-   the same interval -- i.e. nothing happens without X-rays.
+   identically, changes by -0.0016 over the same 20 s interval -- inside the
+   0.004 baseline noise.  Nothing happens without X-rays.
+
+   One caveat, stated because it would otherwise be found by a reader: that
+   control is flat over 20 s but NOT over its full 100 s record, where it
+   drifts to -0.027 (peak-to-peak 0.028, about 7x the noise floor and
+   comparable to the label loss).  The cause is not identified -- it may be
+   lamp or detector drift, or slow sample change.  The comparison is therefore
+   made at a matched time inside the analysed window rather than at each
+   trace's own last frame, which is also why the bar chart in figure V1 is
+   read at 2.9 s: that is the longest time EVERY condition still has data for,
+   the 100 % transmission film having failed optically by 3 s.
 
    At a matched 2.9 s the four irradiated conditions have lost 0.017 to 0.028
    absorbance units against a baseline noise of 0.004.
