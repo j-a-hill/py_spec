@@ -45,11 +45,24 @@ Claim 2.  The label loss saturates in the first couple of MGy; the protein
           damage it sits on does not.
 
     Fitting A = A0 + B exp(-D / d1) at fixed diagnostic wavelengths gives, for
-    the 412 nm loss, D90 = 5.0, 1.3, 1.6 and 2.4 MGy at 5, 25, 50 and 100 %
+    the 412 nm loss, D90 = 0.46, 1.43, 0.83 and 2.71 MGy at 5, 25, 50 and 100 %
     transmission -- against 25 MGy of usable dose at 25 %.  The label-specific
     chemistry is essentially finished while the experiment is still running,
     which is what a finite accessible pool of mixed disulphide being consumed
     looks like.
+
+    IMPORTANT on how that fit is taken.  The 412 nm traces are NOT monotonic:
+    each falls to an extremum within the first few MGy and then returns partway
+    towards its starting value, by 11 % of the fall at 5 % transmission but by
+    76 % at 25 %, 35 % at 50 % and 0 % at 100 %.  A single exponential over the
+    whole range therefore describes neither part (R2 0.48-0.93) and a D90
+    measured from the first to the last frame is meaningless, since the endpoint
+    excursion is small only because the trace came back.  The fit is taken over
+    the FALLING SEGMENT ONLY (R2 0.92-0.98) and D90 describes the loss.  The
+    earlier full-range values (5.0, 1.3, 1.6, 2.4 MGy) are WITHDRAWN.  The
+    recovery is reported separately and not folded into a rate; part of it
+    coincides with the dose range where the internal-zero drift is largest and
+    may not be chemistry.
 
     The 310 and 328 nm growth behaves the opposite way: D90 there falls at
     73-94 % of the measured dose range in every long condition, i.e. nothing
@@ -58,23 +71,37 @@ Claim 2.  The label loss saturates in the first couple of MGy; the protein
     Sutton et al. (2013) report D90 at 400 nm averaging 0.51-0.77 MGy in
     lysozyme, thirty times earlier than our cutoff.
 
-    FIGURE 2, panels (b) and (c).  TABLES 12 and 13.
+    FIGURE 2, panels (b) and (c).  TABLES 8 and 9.
 
 Claim 3.  A joint diffraction-plus-spectroscopy experiment is feasible, but
           only just, and only at low dose rate.
 
-    The dose needed to detect the label loss above the measured baseline floor
-    is 0.25, 0.53 and 0.71 MGy at 25, 50 and 100 % transmission.  Each is
-    divided by the room-temperature diffraction lifetime reported at a
-    COMPARABLE collection speed (0.257, 0.300, 0.373 MGy respectively) rather
-    than by one fixed value -- the inverse dose-rate effect makes the lifetime
-    itself depend on how fast the dose is delivered, and a single denominator
-    would hide the trade-off.  The resulting ratios are 0.97 at 25 % but 1.76
-    and 1.89 at 50 and 100 %.  Only the lowest dose rate is inside the budget on
-    a single crystal; averaging four positions brings the ratio to ~0.5 and
-    twenty-five to ~0.2.
+    "Detectable" has two defensible definitions and they differ by an order of
+    magnitude, because the response is sharply convex -- most of the label loss
+    happens in the first few tenths of a MGy and then flattens:
 
-    Note that TABLE 15 tabulates the same detection doses against six FIXED
+      EMPIRICAL   the dose at which the measured DTNB-minus-apo difference
+                  first exceeds the 0.004 baseline floor and STAYS above it:
+                  0.025, 0.058, 0.088 and 0.243 MGy at 5, 25, 50 and 100 %.
+      LINEAR      the floor divided by the initial slope over the first 1 MGy,
+                  i.e. what a linear extrapolation from the early response
+                  would predict: 0.238, 0.290, 0.454 and 0.792 MGy.
+
+    The LINEAR figure is the conservative one and is what a proposal should be
+    costed against; it is what FIGURE 3 panel (b) plots.  Each is divided by the
+    room-temperature diffraction lifetime reported at a COMPARABLE collection
+    speed (0.257 MGy at the two lowest rates, 0.300 and 0.373 MGy at 50 and
+    100 %) rather than by one fixed value -- the inverse dose-rate effect makes
+    the lifetime itself depend on how fast the dose is delivered, and a single
+    denominator would hide the trade-off.  On the linear basis the ratios are
+    0.93, 1.13, 1.51 and 2.12; on the empirical basis 0.10, 0.23, 0.29 and 0.65.
+    So detection within the lifetime of a single crystal is marginal at best and
+    only at low dose rate; averaging of order four crystals brings the low
+    dose-rate case comfortably inside budget, while the fastest collection needs
+    of order ten.  The earlier figures (0.25/0.53/0.71 MGy, ratios 0.97/1.76/
+    1.89) are WITHDRAWN -- they mixed the two definitions.
+
+    Note that TABLE 10 tabulates the same detection doses against six FIXED
     published lifetimes (0.097-0.373 MGy, Owen et al. 2012) to show the spread;
     its ratio columns are therefore not the same quantity as panel (b) and are
     larger for the two fast conditions.
@@ -83,7 +110,7 @@ Claim 3.  A joint diffraction-plus-spectroscopy experiment is feasible, but
     experiment is doable, but it has to be fast and it wants large single
     crystals, not the multi-position film geometry used here.
 
-    FIGURE 3.  TABLES 14 and 15.
+    FIGURE 3.  TABLE 10.
 
 Claim 4.  At 100 K the label survives; at room temperature it does not.
 
@@ -171,7 +198,9 @@ be rediscovered:
 
   Species assignment (former figure 4, table 7).
      The dominant feature is a POSITIVE band at 307-314 nm that grows in BOTH
-     arms, 2.8-7.0x larger than the label loss (TABLE 14, growth_to_loss_ratio).  It is protein radiation
+     arms, 1.8-10.9x larger than the label loss (TABLE 9: ratio of dA_extremum
+     at 310 nm to that at 412 nm, per condition 5.5, 10.9, 9.6 and 1.8 at
+     5, 25, 50 and 100 % transmission).  It is protein radiation
      chemistry, not the label, and no species is named for it without a matched
      reference spectrum.  It also sits on 328 nm, which is why the
      protein-S-S-TNB mixed disulphide cannot be isolated: the DTNB-specific

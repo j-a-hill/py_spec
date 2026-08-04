@@ -21,12 +21,20 @@
 % diffraction experiment.
 %
 % CITATION CHECK BEFORE SUBMISSION: the keys below are used in this draft and
-% must be confirmed against the .bib before the chapter compiles. Two further
-% sources are cited in the analysis record but no key was confirmed for them,
-% so no key was invented: Weik et al. on the solvent glass transition and
-% restricted diffusion of radiolytic species, and de la Mora et al. 2020 (PNAS)
-% on radiation damage at room temperature. Both DOIs are listed in
-% table_6_references.csv; add keys and cite them at the marked points.
+% must be confirmed against the .bib before the chapter compiles.
+%
+% One further source is wanted but has no key here, and its DOI IS verified in
+% table_6_references.csv: de la Mora et al. 2020 (PNAS, 10.1073/pnas.1821522117),
+% on radiation damage and dose limits in serial crystallography. Add a key and
+% cite it alongside owen2012outrunning at the inverse dose rate paragraph.
+%
+% A second source is wanted and is NOT in table_6_references.csv, so nothing was
+% invented and no DOI is asserted: a primary reference for suppression of
+% secondary radiation chemistry below the solvent glass transition. The
+% temperature-dependence work by Weik and co-workers is the likely source but was
+% not verified during this analysis; the sentence in the Results currently rests
+% on garman2010radiation, which does cover the point in review form. Substitute a
+% verified primary citation if one is to hand.
 %   axford2016thinfilms  JAHO2024fixedtarget  dickerson2024doses
 %   faraj2019cysreactivity  weik2000specific  weik2002specific
 %   burmeister2000structural  garman2010radiation  sutton2013insights
@@ -219,7 +227,8 @@ Referencing each film position to its own pre-irradiation state reveals a
 reproducible response to irradiation (Figure \ref{fig:spec_spectra}). In both
 DTNB soaked and unlabelled crystals a positive feature grows near 310 nm as dose
 accumulates. This feature is the largest change in the spectrum, between two and
-seven times the magnitude of the label signal, and since it appears in both arms
+eleven times the magnitude of the label signal depending on dose rate, and since
+it appears in both arms
 it must be attributed to radiation chemistry of the protein rather than to the
 label; it also overlies 328 nm, which is the reason the mixed disulphide cannot
 be followed directly. In the DTNB soaked crystals, and not in the matched
