@@ -250,17 +250,21 @@ def fit_single_exponential(dose_MGy, delta_a, falling_segment_only=True):
 
     The functional form follows Sutton et al. (2013).
 
-    IMPORTANT, and the reason for ``falling_segment_only``: the 412 nm label
-    traces are NOT monotonic.  Each falls to an extremum within the first few
-    MGy and then partially returns towards its starting value, by 11 % of the
-    fall at 5 % transmission but by 76 % at 25 %.  A single decaying
-    exponential cannot represent that shape, and a D90 measured from the first
-    to the last frame is meaningless for it: the endpoint excursion is small
-    only because the trace came back, not because little happened.  The fit is
-    therefore taken over the falling segment alone, up to and including the
-    extremum, and D90 describes the LOSS.  The subsequent recovery is reported
-    separately and not folded into a rate; part of it coincides with the dose
-    range where the internal-zero drift is largest and may not be chemistry.
+    ON ``falling_segment_only``, and why it is no longer needed for the label.
+    The 412 nm trace of the DTNB arm ALONE is not monotonic: it falls to an
+    extremum within the first few MGy and then returns partway, by 11 % of the
+    fall at 5 % transmission and by 76 % at 25 %.  That recovery is not the
+    label coming back and it is not a spectrometer reset -- DTNB_25 records no
+    resets at all.  It is the protein growth band centred near 310 nm, whose
+    red tail reaches into the 412 nm window and lifts the trace as it builds:
+    over the recovering segment the 412 nm rise correlates with the 310 nm
+    growth at r = +0.96, while the 470-500 nm internal zero stays flat.
+
+    Subtracting the matched apo control removes it, because the growth is
+    common to both arms.  On the DTNB-minus-apo difference the recovery is
+    0-5 % and the trace is monotonic, so the difference is fitted over its
+    full range.  ``falling_segment_only`` remains available for single-arm
+    traces, where the shape still requires it.
 
     ``D90`` is the dose at which the fitted curve has completed 90 % of the
     excursion it makes over the fitted segment.  ``D90_is_lower_bound`` marks
@@ -365,9 +369,11 @@ def table_diagnostic_wavelengths(results, pairs, half_width=4.0):
     return pd.DataFrame(rows)
 
 
-def table_exponential_fits(results, half_width=4.0):
+def table_exponential_fits(results, pairs=None, half_width=4.0):
     """Single-exponential fit and D90 at each diagnostic wavelength."""
     import pandas as pd
+
+    import numpy as np
 
     rows = []
     for key, r in results.items():
@@ -375,11 +381,46 @@ def table_exponential_fits(results, half_width=4.0):
             D, y = diagnostic_trace(r, lam, half_width)
             if D.size < 10:
                 continue
+            # Single-arm traces keep the falling-segment restriction; see
+            # fit_single_exponential for why the difference does not need it.
             f = fit_single_exponential(D, y)
             rows.append({
+                "arm": "single",
                 "condition": key,
                 "wavelength_nm": lam,
                 "dose_max_MGy": round(float(D[-1]), 3),
+                "n_frames_fitted": f["n_frames_fitted"],
+                "dA_extremum": round(f["dA_extremum"], 4),
+                "dose_at_extremum_MGy": round(f["dose_at_extremum_MGy"], 3),
+                "recovery_frac": round(f["recovery_frac"], 3),
+                "d1_MGy": round(f["d1_MGy"], 3),
+                "d1_at_bound": f["d1_at_bound"],
+                "D90_MGy": round(f["D90_MGy"], 3),
+                "D90_is_lower_bound": f["D90_is_lower_bound"],
+                "R2_single": round(f["R2_single"], 4),
+            })
+
+    # The label-specific quantity: DTNB minus its matched apo control, on a
+    # common dose grid.  These are the values the figure and the text quote.
+    for dk, ak in pairs or ():
+        if dk not in results or ak not in results:
+            continue
+        for lam in DIAGNOSTIC_NM:
+            Dd, yd = diagnostic_trace(results[dk], lam, half_width)
+            Da, ya = diagnostic_trace(results[ak], lam, half_width)
+            if Dd.size < 10 or Da.size < 10:
+                continue
+            dmax = min(results[dk].max_valid_dose_MGy(),
+                       results[ak].max_valid_dose_MGy())
+            grid = np.linspace(0.0, float(dmax), 600)
+            diff = np.interp(grid, Dd, yd) - np.interp(grid, Da, ya)
+            f = fit_single_exponential(grid, diff,
+                                       falling_segment_only=False)
+            rows.append({
+                "arm": "difference",
+                "condition": f"{dk} - {ak}",
+                "wavelength_nm": lam,
+                "dose_max_MGy": round(float(dmax), 3),
                 "n_frames_fitted": f["n_frames_fitted"],
                 "dA_extremum": round(f["dA_extremum"], 4),
                 "dose_at_extremum_MGy": round(f["dose_at_extremum_MGy"], 3),

@@ -675,7 +675,7 @@ def figure_species(results, ground_state, loss_spectra, band_fits, band_params, 
                   xycoords="axes fraction", fontsize=5.5, color="0.35")
     ax_d.legend(loc="lower right", fontsize=5.5, framealpha=0.9)
 
-    for ax, letter in zip((ax_a, ax_b, ax_c, ax_d), "abcd"):
+    for ax, letter in zip((ax_a, ax_b, ax_c), "abc"):
         panel_label(ax, letter)
 
     fig.savefig(out_path)
@@ -1280,7 +1280,7 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
     matplotlib.figure.Figure
     """
     from scipy.optimize import curve_fit
-    from .quantify import fit_single_exponential
+    from .quantify import diagnostic_trace, fit_single_exponential
 
     out_path = Path(out_path)
     diag = dict(diagnostics or DIAGNOSTIC_NM)
@@ -1292,21 +1292,38 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
         return r.valid() & (r.dose_MGy <= r.max_valid_dose_MGy())
 
     def trace(key, lam):
-        r = results[key]
-        v = valid_idx(key)
-        bw = ((r.wavelength_nm >= lam - half_width)
-              & (r.wavelength_nm <= lam + half_width))
-        with np.errstate(invalid="ignore"):
-            y = np.nanmean(np.nanmean(r.delta_a[:, bw, :][:, :, v], axis=1),
-                           axis=0)
-        return r.dose_MGy[v], y
+        # Route through diagnostic_trace so the contributing set of film
+        # positions is held FIXED.  Averaging over whatever positions remain
+        # valid at each frame puts a step in the mean wherever one drops out;
+        # that is what produced the apparent dip near 10.7 MGy in the earlier
+        # version of this figure, exactly where DTNB_25 position 3 ends.
+        return diagnostic_trace(results[key], lam, half_width)
+
+    def diff_trace(dk, ak, lam):
+        """DTNB minus matched apo, on a common dose grid.
+
+        The subtraction matters at 412 nm specifically.  The protein growth
+        band centred near 310 nm has a red tail that reaches into the 412 nm
+        window, so the DTNB trace alone falls to an extremum and then appears
+        to recover as that tail builds up underneath it; the apparent recovery
+        correlates with the 310 nm growth at r = +0.96 while the 470-500 nm
+        null stays flat, and it cancels in the difference.
+        """
+        Dd, yd = trace(dk, lam)
+        Da, ya = trace(ak, lam)
+        if Dd.size < 8 or Da.size < 8:
+            return np.array([]), np.array([])
+        dmax = min(results[dk].max_valid_dose_MGy(),
+                   results[ak].max_valid_dose_MGy())
+        grid = np.linspace(0.0, dmax, 600)
+        return grid, np.interp(grid, Dd, yd) - np.interp(grid, Da, ya)
 
     def expo(D, A0, B, d1):
         return A0 + B * np.exp(-D / d1)
 
-    fig, axes = plt.subplots(2, 2, figsize=(7.2, 5.6))
-    (ax_a, ax_b), (ax_c, ax_d) = axes
-    fig.subplots_adjust(hspace=0.62, wspace=0.34, bottom=0.16)
+    fig, axes = plt.subplots(1, 3, figsize=(7.4, 2.5))
+    ax_a, ax_b, ax_c = axes
+    fig.subplots_adjust(wspace=0.42, bottom=0.34, top=0.80)
 
     greys = plt.cm.viridis(np.linspace(0.1, 0.88, len(diag)))
     lam_colour = {lam: greys[i] for i, lam in enumerate(sorted(diag))}
@@ -1319,8 +1336,16 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
         i = int(np.nonzero(v)[0][-1])
         wl = r.wavelength_nm
         keep = (wl >= 285.0) & (wl <= 620.0)
-        ax_a.plot(wl[keep], np.nanmean(r.delta_a[:, keep, i], axis=0),
-                  color=colour, lw=1.1, label=label)
+        # Average over the positions surviving longest, not over whatever is
+        # still valid at the last frame -- the same fixed-set rule the dose
+        # traces use, so panel A and the traces describe the same films.
+        fin = np.isfinite(r.delta_a[:, 0, :])
+        last = np.array([np.nonzero(row)[0][-1] if row.any() else -1
+                         for row in fin])
+        sel = np.argsort(last)[::-1][:3]
+        with np.errstate(invalid="ignore"):
+            spec = np.nanmean(r.delta_a[sel][:, keep, i], axis=0)
+        ax_a.plot(wl[keep], spec, color=colour, lw=1.1, label=label)
     ax_a.axhline(0, color="0.6", lw=0.5)
     # Only the two wavelengths the argument turns on are marked.  Marking all
     # six put more dashed lines on the panel than there were spectra.
@@ -1333,92 +1358,288 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
     ax_a.set_ylabel("\u0394A")
     ax_a.legend(loc="upper right", fontsize=5.5, framealpha=0.9)
 
-    # --- (b, c) dose response at the diagnostic wavelengths ---
-    for ax, key in ((ax_b, "DTNB_25"), (ax_c, "apo_25")):
-        for lam in sorted(diag):
-            D, y = trace(key, lam)
-            ok = np.isfinite(D) & np.isfinite(y)
-            D, y = D[ok], y[ok]
-            if D.size < 12:
-                continue
-            step = max(1, int(D.size / 150))
-            ax.plot(D[::step], y[::step], color=lam_colour[lam], lw=1.0,
-                    label=f"{lam:.0f} nm")
-        ax.axhline(0, color="0.6", lw=0.5)
-        ax.set_xlabel("Absorbed dose (MGy)")
-        # Panels B and C are each a single transmission, so the dose axis maps
-        # onto seconds through that condition's own rate.
-        rr = results[key]
-        vv = rr.valid() & (rr.dose_MGy <= rr.max_valid_dose_MGy())
-        twin_time_axis(ax, rr.dose_MGy[vv], rr.time_s[vv] - rr.time_s[vv][0])
-        ax.set_ylabel("\u0394A")
-    # The chapter figures overlay the fitted decay and report its quality, so
-    # the 412 nm label band carries its exponential fit here too.  The other
-    # five wavelengths are left unfitted: overlaying six would obscure the
-    # traces, and their fits are tabulated in table 13.
+    # --- (b) the label-specific difference, and (c) the rate ---
+    #
+    # Panels B and C previously showed DTNB and apo raw traces side by side,
+    # which asked the reader to do the subtraction by eye; the difference is
+    # the quantity every claim rests on, so it is now drawn directly.  The old
+    # panel (d), a bar chart of endpoint differences per transmission, is
+    # dropped: it compressed each whole dose series into one number and the
+    # same information is in table 8.
     fit_note = []
-    for ax, key in ((ax_b, "DTNB_25"), (ax_c, "apo_25")):
-        D, y = trace(key, 412.0)
-        good = np.isfinite(D) & np.isfinite(y)
-        if good.sum() < 10:
+    for lam in sorted(diag):
+        g, diff = diff_trace("DTNB_25", "apo_25", lam)
+        if g.size < 12:
             continue
-        # Use the package fit so the overlay and table 9 cannot disagree.  It
-        # fits the falling segment only: the 412 nm traces are not monotonic,
-        # and a single exponential over the whole range describes neither part.
-        f = fit_single_exponential(D[good], y[good])
-        if not np.isfinite(f["R2_single"]):
-            continue
-        cut = int(np.argmax(np.abs(y[good] - y[good][0]))) + 1
-        cut = cut if cut >= 10 else D[good].size
-        Df, yf = D[good][:cut], y[good][:cut]
-        popt, _ = curve_fit(
-            expo, Df, yf, p0=[yf[-1], yf[0] - yf[-1], max(Df.max() / 3, 1e-2)],
-            bounds=([-1, -1, 1e-3], [1, 1, 200]), maxfev=40000)
-        ax.plot(Df, expo(Df, *popt), color="0.25", lw=1.0, ls="--", zorder=5,
-                label=f"412 nm loss fit, $R^2$ = {f['R2_single']:.3f}")
-        fit_note.append((key, f["d1_MGy"], f["R2_single"]))
+        step = max(1, int(g.size / 200))
+        ax_b.plot(g[step // 2::step], diff[step // 2::step],
+                  color=lam_colour[lam], lw=1.0, label=f"{lam:.0f} nm")
+    ax_b.axhline(0, color="0.6", lw=0.5)
+    ax_b.set_xlabel("Absorbed dose (MGy)")
+    ax_b.set_ylabel("\u0394A, DTNB \u2212 apo")
+    rr = results["DTNB_25"]
+    vv = rr.valid() & (rr.dose_MGy <= rr.max_valid_dose_MGy())
+    twin_time_axis(ax_b, rr.dose_MGy[vv], rr.time_s[vv] - rr.time_s[vv][0])
+    ax_b.legend(loc="lower left", fontsize=5.0, ncol=2, framealpha=0.85,
+                handlelength=1.2, labelspacing=0.25, borderpad=0.3)
 
-    # One key for panels B and C, placed below the figure.  Inside either panel
-    # it sat on top of the 310 nm trace, and an in-panel legend that covers data
-    # is worse than a slightly more distant one.
-    handles, labels = ax_b.get_legend_handles_labels()
-    seen, hh, ll = set(), [], []
-    for h, l in zip(handles, labels):
-        if l not in seen:
-            seen.add(l)
-            hh.append(h)
-            ll.append(l)
-    fig.legend(hh, ll, loc="lower center", ncol=7, fontsize=5.4,
-               frameon=False, handlelength=1.5, columnspacing=1.3,
-               bbox_to_anchor=(0.5, 0.005))
-
-    # --- (d) label-specific difference at each wavelength ---
-    width = 0.19
-    for j, (dk, ak) in enumerate(pairs):
+    # (c) the rate: the label band against dose at every transmission, with the
+    # fitted exponential overlaid.  This is the panel the original analysis had
+    # and the minimal set had lost -- the D90 values quoted in the text are
+    # read off these curves, and without it they arrive unsupported.
+    for dk, ak in pairs:
         T = int(results[dk].condition.transmission_pct)
-        rd, ra = results[dk], results[ak]
-        dmx = min(rd.max_valid_dose_MGy(), ra.max_valid_dose_MGy())
-        xs, vals = [], []
-        for i, lam in enumerate(sorted(diag)):
-            Dd, yd = trace(dk, lam)
-            Da, ya = trace(ak, lam)
-            gd, ga = Dd <= dmx, Da <= dmx
-            if gd.sum() < 8 or ga.sum() < 8:
-                continue
-            grid = np.linspace(0, dmx, 200)
-            diff = (np.interp(grid, Dd[gd], yd[gd])
-                    - np.interp(grid, Da[ga], ya[ga]))
-            xs.append(i + (j - 1.5) * width)
-            vals.append(diff[-1])
-        ax_d.bar(xs, vals, width=width, color=TRANSMISSION[T], lw=0,
-                 label=f"{T}%")
-    ax_d.axhline(0, color="0.4", lw=0.6)
-    ax_d.set_xticks(range(len(diag)))
-    ax_d.set_xticklabels([f"{l:.0f}" for l in sorted(diag)], fontsize=5.5)
-    ax_d.set_xlabel("Wavelength (nm)")
-    ax_d.set_ylabel("\u0394A, DTNB \u2212 apo")
-    ax_d.legend(loc="lower left", fontsize=5.0, ncol=2, framealpha=0.9,
-                title="transmission", title_fontsize=5.0, handlelength=1.1)
+        g, diff = diff_trace(dk, ak, 412.0)
+        if g.size < 12:
+            continue
+        step = max(1, int(g.size / 200))
+        fit = fit_single_exponential(g, diff, falling_segment_only=False)
+        lab = f"{T}%"
+        if np.isfinite(fit["R2_single"]) and fit["R2_single"] > 0.8:
+            lab = f"{T}%, $D_{{90}}$ {fit['D90_MGy']:.1f} MGy"
+        ax_c.plot(g[step // 2::step], diff[step // 2::step],
+                  color=TRANSMISSION[T], lw=1.0, label=lab)
+        if np.isfinite(fit["R2_single"]) and fit["R2_single"] > 0.8:
+            try:
+                popt, _ = curve_fit(
+                    expo, g, diff,
+                    p0=[diff[-1], diff[0] - diff[-1], max(g.max() / 3, 1e-2)],
+                    bounds=([-1, -1, 1e-3], [1, 1, 200]), maxfev=40000)
+                ax_c.plot(g, expo(g, *popt), color=TRANSMISSION[T], lw=0.7,
+                          ls=(0, (3, 2)), alpha=0.8, zorder=5)
+                fit_note.append((dk, fit["D90_MGy"], fit["R2_single"]))
+            except (RuntimeError, ValueError):
+                pass
+    ax_c.axhline(0, color="0.6", lw=0.5)
+    # Linear, truncated to the dose every condition actually reaches.  A log
+    # axis spanning 0.003-23 MGy gives half the width to the first few frames,
+    # where the trace is noisiest and nothing has happened yet.
+    ax_c.set_xlim(0.0, 5.0)
+    ax_c.set_xlabel("Absorbed dose (MGy)")
+    ax_c.set_ylabel("\u0394A at 412 nm, DTNB \u2212 apo")
+    # Below the axes: at this panel size every in-axes corner is occupied by
+    # a trace, and four entries with fitted values are too wide to inset.
+    ax_c.legend(loc="upper center", bbox_to_anchor=(0.5, -0.30), ncol=2,
+                fontsize=4.8, framealpha=0.0,
+                title="transmission (dashed: fitted decay)",
+                title_fontsize=4.8, handlelength=1.4, labelspacing=0.22,
+                columnspacing=1.0, borderpad=0.2)
+
+    for ax, letter in zip((ax_a, ax_b, ax_c), "abc"):
+        panel_label(ax, letter)
+
+    fig.savefig(out_path)
+    overlaps = check_overlaps(fig)
+    if overlaps:
+        import warnings
+        warnings.warn(f"{out_path.name}: {len(overlaps)} overlaps: {overlaps[:4]}",
+                      stacklevel=2)
+    return fig
+
+
+def figure_kinetics(results, dose_model, no_xray, out_path,
+                    tnb_window=(395.0, 430.0), uv_window=(300.0, 325.0),
+                    min_positions=3, seed=3):
+    """Figure 5: kinetics of the label-specific loss, and what drives it.
+
+    Panel (a) plots the DTNB-minus-apo signal in the TNB window against dose
+    with biexponential fits and the standard error of the mean as a band.  The
+    standard deviation across film positions is drawn as a single bar per
+    condition at the right-hand end of each curve, because it is larger than
+    the difference it brackets -- absolute amplitudes vary more
+    between positions than DTNB differs from apo, since each position carries
+    an unknown amount of crystalline material.  The difference is nonetheless
+    resolvable because its sign is consistent within each arm, which is what
+    the permutation test in table 3 measures.  Panels (b) and (c) replot the same curves referenced
+    to their own first frame, against dose and against time since the
+    detected onset, to ask which axis the conditions collapse onto: a
+    dose-driven process should superimpose in (b), a time-limited one in (c).
+    Panel (d) overlays the no-X-ray control.  Its time axis is elapsed time
+    from each trace's own zero, which is the detected onset for the irradiated
+    films and acquisition start for the control: the control has no onset to
+    detect, having never been irradiated.  The two references differ by the
+    few seconds of hand-timed delay before the shutter opened, which is small
+    against the twenty-five second span shown and does not affect the
+    comparison being made -- that one set changes and the other does not.
+
+    The dose rates span twentyfold across conditions, which is what makes the
+    dose-versus-time comparison possible at all.  Time is measured from the
+    detected onset of change rather than from acquisition start, because the
+    shutter was opened by hand at an unlogged interval after recording began.
+
+    Notes
+    -----
+    The contributing set of film positions is held fixed for the whole trace.
+    Averaging over a set that shrinks as positions drop out puts a step in the
+    mean at every dropout -- when the position carrying the largest signal
+    ends, the mean of the survivors jumps.  At 25 per cent transmission one
+    position ends at 10.7 MGy and the naive mean steps by 0.0074 absorbance
+    units, twenty-six times the frame-to-frame noise.
+
+    Parameters
+    ----------
+    results
+        Processed conditions.
+    dose_model
+        Converts transmission to dose rate.
+    no_xray
+        ``(time_s, delta_a)`` of the scatter-corrected no-X-ray control,
+        integrated over ``tnb_window`` and referenced to its own start.  Its
+        time base is acquisition start, not a detected onset.
+    out_path
+        Output path.
+    tnb_window, uv_window
+        Integration windows, nm.
+    min_positions
+        Number of film positions the fixed contributing set must retain.
+    seed
+        Unused placeholder retained for call compatibility.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    from .quantify import integrate_band
+
+    out_path = Path(out_path)
+    pairs = [("DTNB_5", "apo_5"), ("DTNB_25", "apo_25"),
+             ("DTNB_50", "apo_50"), ("DTNB_100", "apo_100")]
+
+    def biexp(D, A1, k1, A2, k2, c):
+        return c - A1 * (1 - np.exp(-k1 * D)) - A2 * (1 - np.exp(-k2 * D))
+
+    def _fixed(arr):
+        ends = np.array([np.nonzero(np.isfinite(row))[0].max() + 1
+                         if np.isfinite(row).any() else 0 for row in arr])
+        keep_to = int(np.sort(ends)[::-1][min(min_positions, len(ends)) - 1])
+        return np.nonzero(ends >= keep_to)[0], keep_to
+
+    series = {}
+    for dkey, akey in pairs:
+        dres, ares = results[dkey], results[akey]
+        dmax = min(dres.max_valid_dose_MGy(), ares.max_valid_dose_MGy())
+        dv = dres.valid() & (dres.dose_MGy <= dmax)
+        av = ares.valid() & (ares.dose_MGy <= dmax)
+        pd_ = integrate_band(dres.wavelength_nm, dres.delta_a[:, :, dv], tnb_window)
+        pa_ = integrate_band(ares.wavelength_nm, ares.delta_a[:, :, av], tnb_window)
+        n = min(pd_.shape[1], pa_.shape[1])
+        pd_, pa_ = pd_[:, :n], pa_[:, :n]
+        kd, ed = _fixed(pd_)
+        ka, ea = _fixed(pa_)
+        n = min(ed, ea)
+        pd_ = pd_[np.ix_(kd, np.arange(n))]
+        pa_ = pa_[np.ix_(ka, np.arange(n))]
+        dose = dres.dose_MGy[dv][:n]
+        rate = dose_model.rate_at(dres.condition.transmission_pct)
+        mean = np.nanmean(pd_, axis=0) - np.nanmean(pa_, axis=0)
+        # Standard deviation across film positions.  Not the standard error:
+        # the spread between positions is the quantity of interest, because it
+        # reflects how much material each position had in the beam.
+        sd = np.sqrt(np.nanvar(pd_, axis=0, ddof=1)
+                     + np.nanvar(pa_, axis=0, ddof=1))
+        se = np.sqrt(np.nanvar(pd_, axis=0, ddof=1) / pd_.shape[0]
+                     + np.nanvar(pa_, axis=0, ddof=1) / pa_.shape[0])
+        series[dkey] = dict(dose=dose, time=dose / rate, mean=mean, sd=sd,
+                            se=se, n_pos=(pd_.shape[0], pa_.shape[0]))
+
+    fig, axes = plt.subplots(2, 2, figsize=(7.2, 5.0))
+    (ax_a, ax_b), (ax_c, ax_d) = axes
+    fig.subplots_adjust(hspace=0.56, wspace=0.30)
+
+    lo, hi = tnb_window
+    ulo, uhi = uv_window
+
+    # --- (a) fits with SD across positions ---
+    sd_bars = []
+    for key, S in series.items():
+        T = int(results[key].condition.transmission_pct)
+        good = np.isfinite(S["mean"])
+        x, y = S["dose"][good], S["mean"][good]
+        se_ = S["se"][good]
+        # Thin the mean trace to one point per 0.02 MGy: at 10 Hz the raw trace
+        # is ~500 points over this window, which reads as a band rather than a
+        # line once four conditions overlap.
+        step = max(1, int(len(x) / 120))
+        ax_a.fill_between(x[::step], (y - se_)[::step], (y + se_)[::step],
+                          color=TRANSMISSION[T], alpha=0.22, lw=0, zorder=2)
+        ax_a.plot(x[::step], y[::step], color=TRANSMISSION[T], lw=1.0, zorder=3)
+        # The position-to-position spread is an order of magnitude larger than
+        # the difference and is shown once, as a bar, rather than as a band
+        # that would swamp every curve.
+        sd_bars.append((T, float(x[-1]), float(y[-1]), float(S["sd"][good][-1])))
+        try:
+            popt, _ = curve_fit(biexp, x, y, p0=[0.01, 5.0, 0.01, 0.3, 0.0],
+                                bounds=([0, 1e-2, 0, 1e-3, -1],
+                                        [1, 200, 1, 10, 1]), maxfev=80000)
+            ax_a.plot(x, biexp(x, *popt), color="0.2", lw=0.9,
+                      ls=(0, (3, 2)), zorder=4)
+        except Exception:
+            pass
+    ax_a.axhline(0, color="0.6", lw=0.5)
+    # Linear axis truncated to the range every condition reaches.  A log axis
+    # spanning the full 0.003-23 MGy squeezes the region where the conditions
+    # can actually be compared into a fraction of the width; the two long
+    # conditions continue beyond this window and are shown in panel (b).
+    xmax = min(S["dose"].max() for S in series.values())
+    ax_a.set_xlim(0, xmax * 1.14)
+    for T, xe, ye, sde in sd_bars:
+        ax_a.errorbar([xmax * 1.07], [ye], yerr=[sde], fmt="none",
+                      ecolor=TRANSMISSION[T], elinewidth=0.8, capsize=1.5,
+                      zorder=4)
+    # Scale to the means and the standard error.  The position-to-position
+    # standard deviation appears as a single bar at the right of each curve
+    # instead of a band: it exceeds the difference itself, so drawn as a band
+    # it hides the curves it is meant to qualify.
+    lows = [np.nanmin(S["mean"] - S["se"]) for S in series.values()]
+    highs = [np.nanmax(S["mean"] + S["se"]) for S in series.values()]
+    pad = 0.14 * (max(highs) - min(lows))
+    ax_a.set_ylim(min(lows) - pad, max(highs) + pad)
+    # In-figure key so panel (a) can be decoded without the caption.  Proxy
+    # artists name the encodings; conditions are keyed by colour in panel (b).
+    key = [Line2D([], [], color="0.2", lw=0.9, ls=(0, (3, 2)),
+                  label="biexponential fit"),
+           Patch(facecolor="0.45", alpha=0.22, lw=0, label="s.e.m."),
+           Line2D([], [], color="0.45", lw=0.8, marker="_", ls="none",
+                  label="s.d. over positions")]
+    ax_a.legend(handles=key, loc="lower left", fontsize=5.0, framealpha=0.9,
+                handlelength=1.6, borderpad=0.3, labelspacing=0.3)
+    ax_a.set_xlabel("Absorbed dose (MGy)")
+    ax_a.set_ylabel(f"\u0394A, DTNB \u2212 apo\n({lo:.0f}\u2013{hi:.0f} nm)")
+
+
+    # --- (b) dose axis, (c) time-since-onset axis ---
+    for ax, xkey, xlabel in (
+        (ax_b, "dose", "Absorbed dose (MGy)"),
+        (ax_c, "time", "Time since onset of change (s)"),
+    ):
+        for key, S in series.items():
+            T = int(results[key].condition.transmission_pct)
+            y = S["mean"] - S["mean"][0]
+            good = np.isfinite(y)
+            ax.plot(S[xkey][good], y[good], color=TRANSMISSION[T], lw=1.1,
+                    label=f"{T}%")
+        ax.axhline(0, color="0.6", lw=0.5)
+        if xkey == "time":
+            ax.set_xlim(0, 4)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(f"\u0394A change ({lo:.0f}\u2013{hi:.0f} nm)")
+    ax_b.legend(loc="upper right", fontsize=5.5, ncol=2, title="transmission",
+                title_fontsize=5.5, framealpha=0.9)
+
+    # --- (d) no-X-ray control ---
+    t_ctrl, y_ctrl = no_xray
+    for key, S in series.items():
+        T = int(results[key].condition.transmission_pct)
+        y = S["mean"] - S["mean"][0]
+        good = np.isfinite(y)
+        ax_d.plot(S["time"][good], y[good], color=TRANSMISSION[T], lw=1.0)
+    ax_d.plot(t_ctrl, y_ctrl - y_ctrl[0], color="0.25", lw=1.4,
+              label="no X-rays")
+    ax_d.axhline(0, color="0.6", lw=0.5)
+    ax_d.set_xlim(0, 25)
+    ax_d.set_xlabel("Elapsed time (s)")
+    ax_d.set_ylabel(f"\u0394A change ({lo:.0f}\u2013{hi:.0f} nm)")
+    ax_d.legend(loc="lower right", fontsize=5.5)
 
     for ax, letter in zip((ax_a, ax_b, ax_c, ax_d), "abcd"):
         panel_label(ax, letter)
@@ -1432,8 +1653,346 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
     return fig
 
 
-RT_LIFETIME_BY_DOSE_RATE = {0.261: 0.257, 0.521: 0.300, 1.042: 0.373}
+def figure_difference_spectra(results, out_path, tnb_window=(395.0, 430.0),
+                              uv_window=(300.0, 325.0),
+                              zero_window=(470.0, 500.0), seed=5, n_boot=3000):
+    """Figure 6: the full difference spectra behind the band measurements.
 
+    Every other figure reduces the spectra to a number integrated over one
+    window.  This one shows the spectra themselves, so the reader can see that
+    the negative TNB-window feature and the large positive ultraviolet feature
+    are separate, and judge the assignments directly.
+
+    Panel (a) overlays the DTNB and apo difference spectra at the highest
+    common dose for one condition, with the analysis windows shaded.  Panel
+    (b) shows their difference for all four transmissions.  Panel (c) resolves
+    the difference into bands with the standard deviation across film
+    positions, distinguishing features that clear the baseline floor from
+    those that do not.  Panel (d) traces the positive ultraviolet feature and
+    the negative TNB feature against dose on the same axes.
+
+    The positive ultraviolet feature is far larger than the negative one and
+    grows in both arms, so it is not label-specific; it is shown because it
+    dominates the spectrum and because it is what masks the mixed-disulphide
+    position at 328 nm.
+
+    Parameters
+    ----------
+    results
+        Processed conditions.
+    out_path
+        Output path.
+    tnb_window, uv_window, zero_window
+        Analysis windows, nm.  ``zero_window`` is the internal-zero region
+        used to set the baseline floor.
+    seed, n_boot
+        Bootstrap settings for panel (c).
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    from scipy.signal import savgol_filter
+    from .quantify import integrate_band
+
+    out_path = Path(out_path)
+    rng = np.random.default_rng(seed)
+    pairs = [("DTNB_5", "apo_5"), ("DTNB_25", "apo_25"),
+             ("DTNB_50", "apo_50"), ("DTNB_100", "apo_100")]
+
+    wl = results["DTNB_5"].wavelength_nm
+    keep = (wl >= 288.0) & (wl <= 720.0)
+    x = wl[keep]
+
+    def endpoint_pair(dkey, akey):
+        dres, ares = results[dkey], results[akey]
+        dmax = min(dres.max_valid_dose_MGy(), ares.max_valid_dose_MGy())
+        i = np.nonzero(dres.valid() & (dres.dose_MGy <= dmax))[0][-1]
+        j = np.nonzero(ares.valid() & (ares.dose_MGy <= dmax))[0][-1]
+        sd = savgol_filter(np.nanmean(dres.delta_a[:, :, i], axis=0)[keep], 61, 3)
+        sa = savgol_filter(np.nanmean(ares.delta_a[:, :, j], axis=0)[keep], 61, 3)
+        return sd, sa, dmax
+
+    fig, axes = plt.subplots(2, 2, figsize=(7.2, 5.0))
+    (ax_a, ax_b), (ax_c, ax_d) = axes
+    fig.subplots_adjust(hspace=0.62, wspace=0.32)
+
+    # --- (a) the two arms, one condition ---
+    dkey, akey = "DTNB_25", "apo_25"
+    sd, sa, dmax = endpoint_pair(dkey, akey)
+    for w in (uv_window, tnb_window):
+        shade_band(ax_a, w[0], w[1])
+    ax_a.plot(x, sa, color=SOAK["apo"], lw=1.2, label="apo")
+    ax_a.plot(x, sd, color=SOAK["DTNB"], lw=1.2, label="DTNB")
+    ax_a.axhline(0, color="0.6", lw=0.5)
+    ax_a.set_xlabel("Wavelength (nm)")
+    ax_a.set_ylabel("\u0394A from pre-irradiation")
+    ax_a.legend(loc="upper right", fontsize=5.5)
+
+    # --- (b) the difference, all four ---
+    for dk, ak in pairs:
+        T = int(results[dk].condition.transmission_pct)
+        d_, a_, dm_ = endpoint_pair(dk, ak)
+        ax_b.plot(x, d_ - a_, color=TRANSMISSION[T], lw=1.1,
+                  label=f"{T}% ({dm_:.1f} MGy)")
+    for w in (uv_window, tnb_window):
+        shade_band(ax_b, w[0], w[1])
+    ax_b.axhline(0, color="0.6", lw=0.5)
+    ax_b.set_xlabel("Wavelength (nm)")
+    ax_b.set_ylabel("\u0394A, DTNB \u2212 apo")
+    ax_b.legend(loc="lower right", fontsize=4.8, ncol=1)
+
+    # --- (c) band-resolved, with baseline floor ---
+    bands = [("290\u2013300", (290.0, 300.0)), (f"{uv_window[0]:.0f}\u2013{uv_window[1]:.0f}", uv_window),
+             ("325\u2013360", (325.0, 360.0)), (f"{tnb_window[0]:.0f}\u2013{tnb_window[1]:.0f}", tnb_window),
+             ("520\u2013560", (520.0, 560.0)), (f"{zero_window[0]:.0f}\u2013{zero_window[1]:.0f}", zero_window)]
+    width = 0.20
+    floor = []
+    for bi, (bname, (blo, bhi)) in enumerate(bands):
+        for ci, (dk, ak) in enumerate(pairs):
+            T = int(results[dk].condition.transmission_pct)
+            dres, ares = results[dk], results[ak]
+            dmx = min(dres.max_valid_dose_MGy(), ares.max_valid_dose_MGy())
+            i = np.nonzero(dres.valid() & (dres.dose_MGy <= dmx))[0][-1]
+            j = np.nonzero(ares.valid() & (ares.dose_MGy <= dmx))[0][-1]
+            P = integrate_band(dres.wavelength_nm, dres.delta_a[:, :, [i]], (blo, bhi))[:, 0]
+            Q = integrate_band(ares.wavelength_nm, ares.delta_a[:, :, [j]], (blo, bhi))[:, 0]
+            P, Q = P[np.isfinite(P)], Q[np.isfinite(Q)]
+            if P.size < 2 or Q.size < 2:
+                continue
+            val = P.mean() - Q.mean()
+            err = np.sqrt(P.var(ddof=1) / P.size + Q.var(ddof=1) / Q.size)
+            ax_c.bar(bi + (ci - 1.5) * width, val, width * 0.9,
+                     yerr=err, color=TRANSMISSION[T], lw=0,
+                     error_kw=dict(lw=0.5, capsize=1.0, ecolor="0.35"))
+            if (blo, bhi) == zero_window:
+                floor.append(abs(val) + err)
+    if floor:
+        f = max(floor)
+        ax_c.axhspan(-f, f, color="0.5", alpha=0.16, lw=0, zorder=0)
+    ax_c.axhline(0, color="0.4", lw=0.6)
+    ax_c.set_xticks(range(len(bands)))
+    ax_c.set_xticklabels([b[0] for b in bands], fontsize=5.0, rotation=30, ha="right")
+    ax_c.set_xlabel("Band (nm)")
+    ax_c.set_ylabel("\u0394A, DTNB \u2212 apo")
+    ax_c.set_ylim(top=0.105)
+
+    # --- (d) positive and negative features vs dose ---
+    for dk, ak in pairs[:2]:
+        T = int(results[dk].condition.transmission_pct)
+        dres, ares = results[dk], results[ak]
+        dmx = min(dres.max_valid_dose_MGy(), ares.max_valid_dose_MGy())
+        dv = dres.valid() & (dres.dose_MGy <= dmx)
+        dose = dres.dose_MGy[dv]
+        uv = integrate_band(dres.wavelength_nm, dres.delta_a[:, :, dv], uv_window)
+        tn = integrate_band(dres.wavelength_nm, dres.delta_a[:, :, dv], tnb_window)
+        # Hold the contributing positions fixed, as in figure_kinetics: a
+        # shrinking set steps the mean at every dropout.
+        ends = np.array([np.nonzero(np.isfinite(r))[0].max() + 1
+                         if np.isfinite(r).any() else 0 for r in tn])
+        cut = int(np.sort(ends)[::-1][min(3, len(ends)) - 1])
+        sel = np.nonzero(ends >= cut)[0]
+        uv, tn, dose = uv[sel, :cut], tn[sel, :cut], dose[:cut]
+        ax_d.plot(dose, np.nanmean(uv, axis=0), color=TRANSMISSION[T], lw=1.2,
+                  label=f"{uv_window[0]:.0f}\u2013{uv_window[1]:.0f} nm, {T}%")
+        ax_d.plot(dose, np.nanmean(tn, axis=0), color=TRANSMISSION[T], lw=1.2,
+                  ls=(0, (2, 1.5)),
+                  label=f"{tnb_window[0]:.0f}\u2013{tnb_window[1]:.0f} nm, {T}%")
+    ax_d.axhline(0, color="0.6", lw=0.5)
+    ax_d.set_xlabel("Absorbed dose (MGy)")
+    ax_d.set_ylabel("\u0394A (DTNB films)")
+    ax_d.legend(loc="center right", fontsize=4.6, ncol=1, framealpha=0.9)
+
+    for ax, letter in zip((ax_a, ax_b, ax_c, ax_d), "abcd"):
+        panel_label(ax, letter)
+
+    fig.savefig(out_path)
+    overlaps = check_overlaps(fig)
+    if overlaps:
+        import warnings
+        warnings.warn(f"{out_path.name}: {len(overlaps)} overlaps: {overlaps[:4]}",
+                      stacklevel=2)
+    return fig
+
+
+def figure_fit_diagnostics(results, out_path, fit_window=(292.0, 470.0),
+                           growth_window=(292.0, 340.0),
+                           tnb_window=(395.0, 430.0), savgol=(61, 3),
+                           calibration=None):
+    """Figure S2: every processing step and fit behind the band assignments.
+
+    Built so the fits can be audited rather than taken on trust.  Panel (a)
+    overlays raw and smoothed spectra with the residual of smoothing, so the
+    effect of the filter is visible.  Panel (b) shows the two-Gaussian
+    decomposition with its components and residual.  Panel (c) is the reason
+    the fitted band centre cannot be trusted: wavelength-to-wavelength noise
+    against wavelength, which rises steeply into the blue where the growth
+    band's flank lies.  Panel (d) shows how the fitted DTNB-minus-apo centre
+    shift depends on where the fit window starts, next to two model-free
+    measures of the same quantity.
+
+    Panels (c) and (d) exist because the fitted shift is not robust: it falls
+    from about eight nanometres to under three as the fit window is moved off
+    the noisy blue flank, and the model-free measures do not reproduce it.
+
+    Parameters
+    ----------
+    results
+        Processed conditions.
+    out_path
+        Output path.
+    fit_window, growth_window, tnb_window
+        Fit range, growth-band search range, and TNB integration window, nm.
+    savgol
+        ``(window_length, polyorder)`` of the Savitzky-Golay filter applied
+        before peak finding.  Fits are performed on filtered spectra; panel (a)
+        quantifies what that costs.
+    calibration
+        Optional ``(angles_deg, lambda_max_nm)`` from an external
+        dihedral-to-absorption calibration, annotated on panel (d).
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    from scipy.signal import savgol_filter
+    from scipy.optimize import curve_fit
+
+    out_path = Path(out_path)
+    pairs = [("DTNB_5", "apo_5"), ("DTNB_25", "apo_25"), ("DTNB_50", "apo_50")]
+    wl = results["DTNB_5"].wavelength_nm
+    keep = (wl >= 285.0) & (wl <= 725.0)
+    x = wl[keep]
+
+    def gauss(v, A, c, f):
+        return A * np.exp(-4 * np.log(2) * ((v - c) / f) ** 2)
+
+    def two_gauss(v, A1, c1, f1, A2, c2, f2):
+        return gauss(v, A1, c1, f1) + gauss(v, A2, c2, f2)
+
+    def endpoint(key):
+        r = results[key]
+        i = int(np.nonzero(r.valid() & (r.dose_MGy <= r.max_valid_dose_MGy()))[0][-1])
+        return r, i
+
+    def mean_spectrum(key, smooth=True):
+        r, i = endpoint(key)
+        raw = np.nanmean(r.delta_a[:, :, i], axis=0)[keep]
+        return savgol_filter(raw, *savgol) if smooth else raw
+
+    fig, axes = plt.subplots(2, 2, figsize=(7.2, 5.2))
+    (ax_a, ax_b), (ax_c, ax_d) = axes
+    fig.subplots_adjust(hspace=0.60, wspace=0.32)
+
+    # --- (a) smoothing: raw, filtered, residual ---
+    raw = mean_spectrum("DTNB_25", smooth=False)
+    sm = mean_spectrum("DTNB_25", smooth=True)
+    ax_a.plot(x, raw, color="0.65", lw=0.5, label="raw")
+    ax_a.plot(x, sm, color=SOAK["DTNB"], lw=1.1, label="filtered")
+    ax_a.plot(x, raw - sm, color="0.25", lw=0.5, label="residual")
+    ax_a.axhline(0, color="0.6", lw=0.5)
+    ax_a.set_xlabel("Wavelength (nm)")
+    ax_a.set_ylabel("\u0394A")
+    ax_a.legend(loc="upper right", fontsize=5.2, framealpha=0.9)
+
+    # --- (b) the fit and its components ---
+    flo, fhi = fit_window
+    fw = (x >= flo) & (x <= fhi)
+    xf, yf = x[fw], sm[fw]
+    p0 = [yf.max(), 310.0, 50.0, yf.max() * 0.3, 360.0, 80.0]
+    bounds = ([0, 295, 20, 0, 330, 30], [1, 330, 90, 1, 430, 200])
+    popt, _ = curve_fit(two_gauss, xf, yf, p0=p0, bounds=bounds, maxfev=200000)
+    ax_b.plot(xf, yf, color=SOAK["DTNB"], lw=1.1, label="data")
+    ax_b.plot(xf, two_gauss(xf, *popt), color="0.2", lw=0.9, ls=(0, (3, 2)),
+              label="two-Gaussian fit")
+    ax_b.plot(xf, gauss(xf, *popt[:3]), color="0.45", lw=0.7, ls=(0, (1, 1.5)),
+              label=f"band 1, {popt[1]:.0f} nm")
+    ax_b.plot(xf, gauss(xf, *popt[3:]), color="0.65", lw=0.7, ls=(0, (1, 1.5)),
+              label=f"band 2, {popt[4]:.0f} nm")
+    ax_b.plot(xf, yf - two_gauss(xf, *popt), color="0.25", lw=0.5,
+              label="residual")
+    ax_b.axhline(0, color="0.6", lw=0.5)
+    ax_b.set_xlabel("Wavelength (nm)")
+    ax_b.set_ylabel("\u0394A")
+    ax_b.legend(loc="upper right", fontsize=4.6, framealpha=0.9)
+
+    # --- (c) noise against wavelength ---
+    edges = np.arange(285.0, 726.0, 15.0)
+    for dk, ak in pairs[:2]:
+        for key, colour in ((dk, SOAK["DTNB"]), (ak, SOAK["apo"])):
+            r, i = endpoint(key)
+            centres, noise = [], []
+            for lo, hi in zip(edges[:-1], edges[1:]):
+                bw = (wl >= lo) & (wl <= hi)
+                vals = [np.std(np.diff(r.delta_a[pi, bw, i])) / np.sqrt(2)
+                        for pi in range(r.delta_a.shape[0])
+                        if np.isfinite(r.delta_a[pi, bw, i]).all()]
+                if vals:
+                    centres.append(0.5 * (lo + hi))
+                    noise.append(np.mean(vals))
+            ax_c.plot(centres, noise, color=colour, lw=1.0,
+                      alpha=0.55 if dk.endswith("_5") else 1.0)
+    shade_band(ax_c, *growth_window)
+    shade_band(ax_c, *tnb_window)
+    ax_c.set_yscale("log")
+    ax_c.set_xlabel("Wavelength (nm)")
+    ax_c.set_ylabel("Noise (\u0394A per point)")
+    key_c = [Line2D([], [], color=SOAK["DTNB"], lw=1.0, label="DTNB"),
+             Line2D([], [], color=SOAK["apo"], lw=1.0, label="apo")]
+    ax_c.legend(handles=key_c, loc="upper right", fontsize=5.2, framealpha=0.9)
+
+    # --- (d) window sensitivity of the fitted shift ---
+    starts = np.arange(292.0, 306.1, 2.0)
+    for dk, ak in pairs:
+        T = int(results[dk].condition.transmission_pct)
+        shifts = []
+        for wlo in starts:
+            fwv = (x >= wlo) & (x <= fhi)
+            cs = []
+            for key in (dk, ak):
+                yy = mean_spectrum(key)[fwv]
+                bb = ([0, max(295, wlo), 20, 0, 330, 30],
+                      [1, 330, 90, 1, 430, 200])
+                try:
+                    pp, _ = curve_fit(two_gauss, x[fwv], yy,
+                                      p0=[yy.max(), 310, 50, yy.max() * 0.3, 360, 80],
+                                      bounds=bb, maxfev=200000)
+                    cs.append(pp[1])
+                except Exception:
+                    cs.append(np.nan)
+            shifts.append(cs[0] - cs[1])
+        ax_d.plot(starts, shifts, color=TRANSMISSION[T], lw=1.1,
+                  marker="o", ms=2.2, label=f"{T}%")
+    ax_d.axhline(0, color="0.4", lw=0.6)
+    ax_d.set_xlabel("Fit window start (nm)")
+    ax_d.set_ylabel("Fitted DTNB \u2212 apo\ncentre shift (nm)")
+    ax_d.legend(loc="lower right", fontsize=5.2, ncol=3, framealpha=0.9,
+                title="transmission", title_fontsize=5.2)
+
+    for ax, letter in zip((ax_a, ax_b, ax_c, ax_d), "abcd"):
+        panel_label(ax, letter)
+
+    fig.savefig(out_path)
+    overlaps = check_overlaps(fig)
+    if overlaps:
+        import warnings
+        warnings.warn(f"{out_path.name}: {len(overlaps)} overlaps: {overlaps[:4]}",
+                      stacklevel=2)
+    return fig
+
+
+DIAGNOSTIC_NM = {310.0: "growth band",
+                 328.0: "protein\u2013S\u2013S\u2013TNB",
+                 400.0: "disulphide radical",
+                 412.0: "free TNB$^{2-}$",
+                 480.0: "isosbestic",
+                 580.0: "solvated e$^-$"}
+
+
+# Room-temperature diffraction lifetimes (MGy) as a function of dose rate,
+# from Owen et al. 2012; the inverse dose-rate effect means the usable dose
+# depends on how fast it is delivered.
+RT_LIFETIME_BY_DOSE_RATE = {0.261: 0.257, 0.521: 0.300, 1.042: 0.373}
 
 def figure_experiment_design(results, out_path, tnb_window=(408.0, 416.0),
                              slope_dose_max=1.0, noise_floor=0.004,
@@ -1722,14 +2281,16 @@ def figure_original_idiom(results, out_path, doses_MGy=(0.0, 0.5, 2.0, 5.0, 20.0
                 y = np.nanmean(band, axis=0)
                 sd = np.nanstd(band, axis=0)
             step = max(1, int(x.size / 200))
-            ax.plot(x[::step], y[::step], color=colour, lw=1.2)
+            ax.plot(x[::step], y[::step], color=colour, lw=1.2,
+                    label=SOAK_LABEL.get(key.split("_")[0], key.split("_")[0]))
             ax.fill_between(x[::step], (y - sd)[::step], (y + sd)[::step],
                             color=colour, alpha=0.16, lw=0)
-            ax.annotate(SOAK_LABEL.get(key.split("_")[0], key.split("_")[0]),
-                        xy=(x[::step][-1], y[::step][-1]), xytext=(3, 0),
-                        textcoords="offset points", fontsize=5.2,
-                        color=colour, va="center")
         ax.axhline(0, color="0.6", lw=0.5)
+        # A per-panel key rather than labels anchored to the end of each trace.
+        # The traces do not all end at the same x, so a fixed offset from the
+        # last point put the apo label across the neighbouring y-axis title.
+        ax.legend(loc="upper left", fontsize=5.2, framealpha=0.0,
+                  handlelength=1.3, labelspacing=0.25, borderpad=0.25)
         ax.set_xlabel("Absorbed dose (MGy)" if xaxis == "dose"
                       else "Time since shutter opening (s)")
         ax.set_ylabel(f"\u0394A at {lam:.0f} nm")

@@ -247,7 +247,7 @@ def main(argv=None) -> int:
     # that one command really does reproduce every table the chapter cites.
     diag = table_diagnostic_wavelengths(results, PAIRS)
     diag.to_csv(out / "table_8_diagnostic_wavelengths.csv", index=False)
-    expo = table_exponential_fits(results)
+    expo = table_exponential_fits(results, pairs=PAIRS)
     expo.to_csv(out / "table_9_exponential_fits_D90.csv", index=False)
     budget = table_dose_budget(results, PAIRS)
     budget.to_csv(out / "table_10_dose_budget.csv", index=False)

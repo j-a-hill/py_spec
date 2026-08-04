@@ -35,7 +35,9 @@ __all__ = [
 # Changing this dict reassigns the colours everywhere; no figure hardcodes them.
 SOAK = {"DTNB": "#c04a1e", "apo": "#1b3a6b"}
 #: Soak state -> figure label.
-SOAK_LABEL = {"DTNB": "DTNB-soaked", "apo": "apo (no DTNB)"}
+# "apo" already means unlabelled; spelling out "(no DTNB)" restates the
+# definition of the word in every legend it appears in.
+SOAK_LABEL = {"DTNB": "DTNB-soaked", "apo": "apo"}
 #: Nominal X-ray transmission (%) -> colour, dark = higher dose rate.
 TRANSMISSION = {
     5: "#bcd2e8",
