@@ -236,11 +236,15 @@ KNOWN LIMITS
     unknown and varies between positions, so no amplitude converts to a
     concentration or an occupancy.  Only relative measures are reported.
 
-  * Absorbed dose is an estimate.  The shutter was operated by hand; the
-    detected onset is an UPPER BOUND on the true shutter time.  RADDOSE-3D was
-    run for a 50 x 50 um top-hat beam at 5e12 photons/s, while the chapter
-    quotes 20 x 20 um at 8e12 -- this discrepancy is unresolved and is flagged
-    in the methods draft.
+  * Absorbed dose is an estimate, but the beam geometry is settled.  RADDOSE-3D
+    was run for a 50 x 50 um top-hat beam at 5e12 photons/s, which is the
+    geometry that was used: the beam was opened to the size of the chip because
+    it could not be matched accurately to the spectrometer probe.  The
+    20 x 20 um figure in the chapter methods belongs to the separate I24
+    time-resolved diffraction experiment.  What remains uncertain is the
+    TIMING: the shutter was operated by hand and its opening is recovered from
+    the spectra, so the detected onset is an upper bound on the true shutter
+    time and every absolute dose inherits that bound.
 
   * Baseline floor ~0.003-0.004 absorbance, measured not assumed: the
     470-500 nm internal zero is not actually zero in DTNB films at the last

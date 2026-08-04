@@ -26,7 +26,13 @@ from .figures import (
     figure_qc,
 )
 from .pipeline import process_condition
-from .quantify import band_series, integrate_band
+from .quantify import (
+    band_series,
+    integrate_band,
+    table_diagnostic_wavelengths,
+    table_dose_budget,
+    table_exponential_fits,
+)
 from .registry import load_registry
 from .style import apply_style
 
@@ -235,6 +241,16 @@ def main(argv=None) -> int:
     qc.to_csv(out / "table_S1_per_position_qc.csv", index=False)
     slopes = table_initial_slopes(results)
     slopes.to_csv(out / "table_4_initial_slopes.csv", index=False)
+
+    # The diagnostic-wavelength route.  These three were computed outside the
+    # package while the analysis was being settled; they are generated here so
+    # that one command really does reproduce every table the chapter cites.
+    diag = table_diagnostic_wavelengths(results, PAIRS)
+    diag.to_csv(out / "table_8_diagnostic_wavelengths.csv", index=False)
+    expo = table_exponential_fits(results)
+    expo.to_csv(out / "table_9_exponential_fits_D90.csv", index=False)
+    budget = table_dose_budget(results, PAIRS)
+    budget.to_csv(out / "table_10_dose_budget.csv", index=False)
 
     # The minimal figure set.  Every figure here answers one question that the
     # chapter needs; the exploratory figures built during the analysis are not

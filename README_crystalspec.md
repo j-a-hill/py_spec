@@ -11,8 +11,8 @@ DU970P EM-CCD, 0.1 s kinetic cycle, 12.4 keV X-rays.
 
 ```bash
 pip install -e .
-python -m crystalspec.run --config config/experiment.toml --out outputs/ \
-    --cross-validation outputs/table_2_cross_validation.csv
+PYTHONPATH=src python -m crystalspec.run \
+    --config config/experiment.toml --out outputs/
 ```
 
 That single command reads the raw `.asc` files and writes every figure and
@@ -138,10 +138,9 @@ story document ties each to the claim it supports.
 | `table_1_condition_summary.csv` | per condition: exposure, QC counts, endpoint band values |
 | `table_3_label_specificity.csv` | DTNB against apo, exact permutation test per level |
 | `table_4_initial_slopes.csv` | initial slope of each band against dose, with bootstrap intervals |
-| `table_12_diagnostic_wavelengths.csv` | DTNB-minus-apo difference and initial slope at each diagnostic wavelength |
-| `table_13_exponential_fits_D90.csv` | single-exponential fits and D90 per wavelength and condition |
-| `table_14_label_budget.csv` | fraction of label lost by dose, per condition |
-| `table_15_dose_budget.csv` | detection dose against published room-temperature lifetimes |
+| `table_8_diagnostic_wavelengths.csv` | DTNB-minus-apo difference and initial slope at each diagnostic wavelength |
+| `table_9_exponential_fits_D90.csv` | single-exponential fits and D90 per wavelength and condition |
+| `table_10_dose_budget.csv` | detection dose against published room-temperature lifetimes, both definitions |
 | `table_6_references.csv` | the 22 verified literature sources, DOIs checked |
 | `table_S1_per_position_qc.csv` | per position: resets, stitching, truncation, usable window |
 | `methods_and_results_draft.txt` | thesis-style methods and results prose |
@@ -160,11 +159,14 @@ create a step in the mean.
 
 ## Known limitations
 
-- **Dose calibration is provisional.** The supplied RADDOSE-3D run used a
-  50 x 50 um beam at 5e12 ph/s, while the chapter methods describe
-  20 x 20 um at 8e12 ph/s for the I24 experiment. If the spectroscopy beam
-  differed from the modelled one, every dose axis rescales by a constant
-  factor. Comparisons *between* transmission levels are unaffected.
+- **Absorbed dose is an estimate, but the geometry is settled.** The beam was
+  deliberately opened to the size of the chip, 50 x 50 um, because it could not
+  be matched accurately to the spectrometer probe footprint, so the supplied
+  RADDOSE-3D run models the geometry actually used. The 20 x 20 um figure in the
+  chapter methods belongs to the separate I24 time-resolved experiment. The
+  residual uncertainty is in the *timing*, not the geometry: the shutter was
+  operated by hand and its opening is recovered from the spectra, so the detected
+  onset is an upper bound on the true shutter time.
 - **The internal-zero check is not flat.** After correction the 470-500 nm
   window should read zero at all doses. It does not: at the highest doses
   the residual reaches 12-29 % of the co-located TNB signal in the DTNB

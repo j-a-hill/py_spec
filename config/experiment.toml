@@ -24,12 +24,20 @@ raw_dir = "../../data_raw/HGD_nanospec/mx29074-47"
 # the dose rate at 100 % transmission; each condition scales it by its
 # nominal attenuator transmission.
 #
-# CAVEAT, to be resolved before the numbers are quoted in the thesis: the
-# chapter methods state a 20 x 20 um beam and 8e12 ph/s for the I24
-# time-resolved experiment, whereas this RADDOSE run used 50 x 50 um and
-# 5e12 ph/s.  If the spectroscopy beam differed from the value modelled
-# here, every dose axis rescales by a constant factor -- relative
-# comparisons between transmission levels are unaffected.
+# RESOLVED: the beam for the spectroscopy runs was deliberately opened to the
+# size of the chip, 50 x 50 um, because the X-ray beam could not be matched
+# accurately to the spectrometer probe footprint.  The RADDOSE-3D run supplied
+# with the dataset therefore models the geometry that was actually used, and
+# the 20 x 20 um figure in the chapter methods belongs to the separate I24
+# time-resolved diffraction experiment, not to these acquisitions.  The dose
+# rate below stands as calculated.
+#
+# One consequence is worth carrying: with the beam matched to the chip rather
+# than to the probe, the illuminated area is larger than the region the
+# spectrometer reads, so the probed volume sits inside a uniformly irradiated
+# field.  That removes any concern about the probe sampling a partially
+# illuminated volume, and is the reason a single whole-crystal average dose is
+# an appropriate axis here.
 [dose]
 raddose_dose_per_exposure_MGy = 0.104181
 raddose_exposure_s = 0.1

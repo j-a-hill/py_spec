@@ -26,6 +26,7 @@ from .style import (
     check_overlaps,
     panel_label,
     shade_band,
+    twin_time_axis,
 )
 
 __all__ = ["figure_qc", "figure_signature", "figure_cryo", "figure_dose_dependence", "figure_species", "figure_kinetics", "figure_difference_spectra", "figure_fit_diagnostics", "figure_diagnostic_wavelengths", "figure_experiment_design", "figure_original_idiom", "figure_buffer_controls", "figure_shoulder_isosbestic"]
@@ -1279,6 +1280,7 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
     matplotlib.figure.Figure
     """
     from scipy.optimize import curve_fit
+    from .quantify import fit_single_exponential
 
     out_path = Path(out_path)
     diag = dict(diagnostics or DIAGNOSTIC_NM)
@@ -1302,9 +1304,9 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
     def expo(D, A0, B, d1):
         return A0 + B * np.exp(-D / d1)
 
-    fig, axes = plt.subplots(2, 2, figsize=(7.2, 5.2))
+    fig, axes = plt.subplots(2, 2, figsize=(7.2, 5.6))
     (ax_a, ax_b), (ax_c, ax_d) = axes
-    fig.subplots_adjust(hspace=0.62, wspace=0.34)
+    fig.subplots_adjust(hspace=0.62, wspace=0.34, bottom=0.16)
 
     greys = plt.cm.viridis(np.linspace(0.1, 0.88, len(diag)))
     lam_colour = {lam: greys[i] for i, lam in enumerate(sorted(diag))}
@@ -1344,9 +1346,51 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
                     label=f"{lam:.0f} nm")
         ax.axhline(0, color="0.6", lw=0.5)
         ax.set_xlabel("Absorbed dose (MGy)")
+        # Panels B and C are each a single transmission, so the dose axis maps
+        # onto seconds through that condition's own rate.
+        rr = results[key]
+        vv = rr.valid() & (rr.dose_MGy <= rr.max_valid_dose_MGy())
+        twin_time_axis(ax, rr.dose_MGy[vv], rr.time_s[vv] - rr.time_s[vv][0])
         ax.set_ylabel("\u0394A")
-    ax_b.legend(loc="upper left", fontsize=4.8, ncol=2, framealpha=0.9,
-                handlelength=1.4, columnspacing=0.9)
+    # The chapter figures overlay the fitted decay and report its quality, so
+    # the 412 nm label band carries its exponential fit here too.  The other
+    # five wavelengths are left unfitted: overlaying six would obscure the
+    # traces, and their fits are tabulated in table 13.
+    fit_note = []
+    for ax, key in ((ax_b, "DTNB_25"), (ax_c, "apo_25")):
+        D, y = trace(key, 412.0)
+        good = np.isfinite(D) & np.isfinite(y)
+        if good.sum() < 10:
+            continue
+        # Use the package fit so the overlay and table 9 cannot disagree.  It
+        # fits the falling segment only: the 412 nm traces are not monotonic,
+        # and a single exponential over the whole range describes neither part.
+        f = fit_single_exponential(D[good], y[good])
+        if not np.isfinite(f["R2_single"]):
+            continue
+        cut = int(np.argmax(np.abs(y[good] - y[good][0]))) + 1
+        cut = cut if cut >= 10 else D[good].size
+        Df, yf = D[good][:cut], y[good][:cut]
+        popt, _ = curve_fit(
+            expo, Df, yf, p0=[yf[-1], yf[0] - yf[-1], max(Df.max() / 3, 1e-2)],
+            bounds=([-1, -1, 1e-3], [1, 1, 200]), maxfev=40000)
+        ax.plot(Df, expo(Df, *popt), color="0.25", lw=1.0, ls="--", zorder=5,
+                label=f"412 nm loss fit, $R^2$ = {f['R2_single']:.3f}")
+        fit_note.append((key, f["d1_MGy"], f["R2_single"]))
+
+    # One key for panels B and C, placed below the figure.  Inside either panel
+    # it sat on top of the 310 nm trace, and an in-panel legend that covers data
+    # is worse than a slightly more distant one.
+    handles, labels = ax_b.get_legend_handles_labels()
+    seen, hh, ll = set(), [], []
+    for h, l in zip(handles, labels):
+        if l not in seen:
+            seen.add(l)
+            hh.append(h)
+            ll.append(l)
+    fig.legend(hh, ll, loc="lower center", ncol=7, fontsize=5.4,
+               frameon=False, handlelength=1.5, columnspacing=1.3,
+               bbox_to_anchor=(0.5, 0.005))
 
     # --- (d) label-specific difference at each wavelength ---
     width = 0.19
@@ -1689,6 +1733,14 @@ def figure_original_idiom(results, out_path, doses_MGy=(0.0, 0.5, 2.0, 5.0, 20.0
         ax.set_xlabel("Absorbed dose (MGy)" if xaxis == "dose"
                       else "Time since shutter opening (s)")
         ax.set_ylabel(f"\u0394A at {lam:.0f} nm")
+        if xaxis == "dose":
+            # Both arms in these panels are one transmission, so a single dose
+            # rate maps the axis onto seconds.  The chapter figures carry the
+            # time axis; keeping it means the two can be read against each other.
+            rr = results[condition]
+            vv = rr.valid() & (rr.dose_MGy <= rr.max_valid_dose_MGy())
+            twin_time_axis(ax, rr.dose_MGy[vv],
+                           rr.time_s[vv] - rr.time_s[vv][0])
 
     for ax, letter in zip((ax_a, ax_b, ax_c, ax_d), "abcd"):
         panel_label(ax, letter)
