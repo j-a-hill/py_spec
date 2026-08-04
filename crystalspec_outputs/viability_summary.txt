@@ -48,10 +48,18 @@ THE THREE THINGS THAT HAD TO BE TRUE
    over several crystals rather than a different technique.
 
    The trend is the useful part: SLOWER delivery is better.  Detection dose
-   rises almost fivefold from 5 % to 100 % transmission
-   (0.025 to 0.243 MGy)
-   because faster irradiation destroys the label before enough spectra
-   accumulate.
+   rises 9.7-fold from 5 % to 100 % transmission (0.025 to 0.243 MGy)
+   for a 20-fold increase in dose rate, because faster irradiation destroys
+   the label before enough spectra accumulate.
+
+   The six lifetimes used above are all from Owen et al. 2012
+   (doi:10.1107/s0907444912012553, "Outrunning free radicals in
+   room-temperature macromolecular crystallography"), for named systems at
+   stated rep rates: BEV2 at 1 Hz 0.097 MGy, A2AAR at 1 Hz 0.108, FcgRIIIa
+   stop-start 0.186, A2AAR at 25 Hz 0.192, FcgRIIIa continuous below 11 Hz
+   0.257, FcgRIIIa at 25 Hz 0.373.  They are a bracket from comparable
+   systems, not measurements on HGD, which is why the comparison is reported
+   as a range rather than a single ratio.
 
 3. THE CONTRAST LIMIT IS UNDERSTOOD                     [figure V3]
 
