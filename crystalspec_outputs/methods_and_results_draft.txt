@@ -280,13 +280,28 @@ at \(-0.0025\), \(-0.0071\), \(-0.0036\) and \(-0.0054\) per MGy at 5, 25, 50 an
 100 \% transmission, and positive in the unlabelled controls at the three lower
 dose rates, at \(+0.0025\), \(+0.0020\) and \(+0.0025\) per MGy at 5, 10 and
 25 \%. The inversion of sign with soak state is the clearest expression of the
-effect and requires no kinetic model. Fitting a single exponential to the falling
-part of the 412 nm trace gives \(D_{90}\), the dose at which nine tenths of the
-loss has occurred, of 0.46, 1.43, 0.83 and 2.71 MGy across the four settings
-(\(R^{2} = 0.92\) to 0.98; Table \ref{tab:spec_D90}). Against the 23 MGy
-available at 25 \% transmission, the label specific chemistry is therefore
+effect and requires no kinetic model. Fitting a single exponential to the
+difference between the labelled and unlabelled traces at 412 nm gives
+\(D_{90}\), the dose at which nine tenths of the loss has occurred, of 1.70,
+9.51, 0.80 and 1.86 MGy across the four settings (\(R^{2} = 0.75\) to 0.99;
+Table \ref{tab:spec_D90}). At three of the four the label specific chemistry is
 substantially complete while the measurement is still in progress, which is what
-the consumption of a finite accessible pool of mixed disulphide would produce.
+the consumption of a finite accessible pool of mixed disulphide would produce;
+the exception is 25 \% transmission, the only setting whose film survives to
+23 MGy and therefore the only one whose fit is constrained over a range the
+others do not reach.
+
+The subtraction is not cosmetic. Taken alone, the 412 nm trace of the labelled
+film is not monotonic: it falls to an extremum within the first few MGy and then
+returns partway towards its starting value, by 11 \% of the fall at 5 \%
+transmission and 76 \% at 25 \%. That recovery is neither a return of the label
+nor a detector artefact, since no spectrometer resets are recorded in that
+series. It is the red tail of the protein absorbance growth centred near 310 nm
+encroaching on the 412 nm window as that band builds, and over the recovering
+segment the two are correlated at \(r = +0.96\) while the 470--500 nm internal
+zero changes by less than 0.001. The growth is common to both soak states, so it
+cancels in the difference, which is monotonic to within 5 \% and is fitted over
+its full range.
 The growth at 310 and 328 nm behaves in the opposite way, its fitted
 \(D_{90}\) falling at 73 to 94 \% of the measured dose range in every long
 condition, so that the characteristic dose there is a lower bound set by the
