@@ -283,13 +283,35 @@ dose rates, at \(+0.0025\), \(+0.0020\) and \(+0.0025\) per MGy at 5, 10 and
 effect and requires no kinetic model. Fitting a single exponential to the
 difference between the labelled and unlabelled traces at 412 nm gives
 \(D_{90}\), the dose at which nine tenths of the loss has occurred, of 1.70,
-9.51, 0.80 and 1.86 MGy across the four settings (\(R^{2} = 0.75\) to 0.99;
-Table \ref{tab:spec_D90}). At three of the four the label specific chemistry is
+9.51 and 0.80 MGy at 5, 25 and 50 \% transmission (\(R^{2} = 0.92\) to 0.99;
+Table \ref{tab:spec_D90}). The label specific chemistry is therefore
 substantially complete while the measurement is still in progress, which is what
-the consumption of a finite accessible pool of mixed disulphide would produce;
-the exception is 25 \% transmission, the only setting whose film survives to
-23 MGy and therefore the only one whose fit is constrained over a range the
-others do not reach.
+the consumption of a finite accessible pool of mixed disulphide would produce.
+
+At 100 \% transmission the same fit does not determine a rate, and \(D_{90}\)
+is reported only as a lower bound of 1.9 MGy. The reason is not the quality of
+the data but the range over which they were collected: the film fails optically
+at 2.1 MGy, and an exponential is close to linear over the first fraction of its
+own characteristic dose, so a curve that has barely begun to bend admits time
+constants spanning orders of magnitude at indistinguishable goodness of fit. The
+quantity that exposes this is the fraction of the modelled decay traversed by
+the measurement, \(1 - \exp(-D_{\mathrm{max}}/d_{1})\), which is 0.999, 0.996
+and 0.998 at the three lower settings but 0.140 at 100 \%. Profiling the
+characteristic dose at that setting, with the remaining parameters refitted at
+each value, moves \(R^{2}\) only from 0.746 to 0.755 as \(d_{1}\) rises from
+10 to 200 MGy, and resampling the film positions places \(d_{1}\) anywhere
+between 0.16 and 200 MGy. Fits
+traversing less than half of their modelled decay are flagged as lower bounds
+throughout, and no fitted curve is drawn for them.
+
+A second exponential improves the description of every trace, raising
+\(R^{2}\) to 0.993 or above and lowering the Akaike information criterion by
+several hundred, but it was not adopted. Bootstrapped over film positions the
+slow component is unconstrained, spanning 0.46 to 200 MGy at 5 \% transmission
+and reaching the fitting bound in three resamples in ten. The gain is in
+describing a single realisation rather than in estimating a second rate that
+would replicate, and with five positions per condition a single exponential with
+an explicit identifiability criterion is the more defensible summary.
 
 The subtraction is not cosmetic. Taken alone, the 412 nm trace of the labelled
 film is not monotonic: it falls to an extremum within the first few MGy and then

@@ -45,14 +45,41 @@ Claim 2.  The label loss saturates in the first couple of MGy; the protein
           damage it sits on does not.
 
     Fitting A = A0 + B exp(-D / d1) to the DTNB-MINUS-APO difference at 412 nm
-    gives D90 = 1.70, 9.51, 0.80 and 1.86 MGy at 5, 25, 50 and 100 %
-    transmission (R2 0.75-0.99; TABLE 9, rows with arm = difference) -- against
-    23 MGy of usable dose at 25 %.  At three of the four settings the
-    label-specific chemistry is substantially finished while the experiment is
-    still running, which is what a finite accessible pool of mixed disulphide
-    being consumed looks like.  The exception is 25 %, where D90 is 40 % of the
-    measured range; it is also the only condition whose film survives to 23 MGy,
-    so its fit is constrained over a range the others never reach.
+    gives D90 = 1.70, 9.51 and 0.80 MGy at 5, 25 and 50 % transmission (R2
+    0.92-0.99; TABLE 9, rows with arm = difference).  At 100 % the fit does NOT
+    determine a rate and D90 is reported as a lower bound, > 1.9 MGy: see the
+    identifiability note below.  Where it is determined, the label-specific
+    chemistry is substantially finished while the experiment is still running,
+    which is what a finite accessible pool of mixed disulphide being consumed
+    looks like.
+
+    IDENTIFIABILITY, and why R2 is not the test.  A decaying exponential is
+    nearly linear over the first fraction of its own time constant, so a trace
+    that has barely begun to bend can be fitted with a high R2 by a curve whose
+    d1 lies far outside the measured range.  The diagnostic that matters is the
+    fraction of the modelled decay the measurement actually traverses,
+    1 - exp(-D_max / d1), reported as decay_observed_frac in TABLE 9.  At 5, 25
+    and 50 % transmission it is 0.999, 0.996 and 0.998: the decay is essentially
+    complete within the data.  At 100 % it is 0.140.  The likelihood is
+    correspondingly flat: profiling d1 with the other two parameters refitted
+    at each value gives R2 = 0.7456, 0.7485, 0.7518, 0.7539 and 0.7554 at
+    d1 = 10, 13.8, 25, 50 and 200 MGy -- five thousandths of R2 across a
+    twentyfold change in the rate.  Two implementations differing only in
+    their dose grid land on d1 = 13.8 and d1 = 200 (the fitting bound), and
+    resampling the five film positions puts d1 anywhere in [0.16, 200] MGy
+    with 20 % of resamples at the bound.  The
+    package therefore flags any fit with decay_observed_frac < 0.5 as a lower
+    bound (crystalspec.quantify.DECAY_OBSERVED_MIN) and figure 2 draws no curve
+    for it.
+
+    A second exponential raises R2 at every setting (0.953 -> 0.996 at 5 %,
+    0.919 -> 0.993 at 25 %, 0.986 -> 0.993 at 50 %) and AIC prefers it by a
+    wide margin, but it is NOT adopted: bootstrapped over film positions the
+    slow component spans [0.46, 200] MGy at 5 % and sits at its bound in 30 % of
+    resamples.  The improvement is in describing one realisation of the data,
+    not in estimating a second rate that replicates.  One exponential per
+    condition, with the identifiability flag, is what these five positions
+    support.
 
     IMPORTANT on which trace is fitted, and why it changed.  The 412 nm trace of
     the DTNB ARM ALONE is not monotonic: it falls to an extremum within the

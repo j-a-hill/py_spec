@@ -1397,12 +1397,20 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
         # Report every converged fit with its R2 rather than hiding the weaker
         # ones: suppressing the 100 % entry (R2 0.75) left the figure silently
         # short of a value the text quotes.  The reader weighs the quality.
+        # A fit counts only if the measurement traversed most of the decay it
+        # postulates.  R^2 does not test this: at 100 % transmission the single
+        # exponential reaches R^2 0.76 while observing 0.14 of its own modelled
+        # decay, and d1 then ranges over three orders of magnitude across
+        # position-bootstrap resamples.  Such a fit is shown as a lower bound
+        # with no curve drawn, rather than as a number the reader would trust.
         ok_fit = (np.isfinite(fit["R2_single"]) and np.isfinite(fit["D90_MGy"])
                   and not fit["D90_is_lower_bound"])
         lab = f"{T}%"
         if ok_fit:
             lab = (f"{T}%, $D_{{90}}$ {fit['D90_MGy']:.1f} MGy"
                    f" ($R^2$ {fit['R2_single']:.2f})")
+        elif np.isfinite(fit["D90_MGy"]):
+            lab = f"{T}%, $D_{{90}}$ > {fit['D90_MGy']:.1f} MGy (not saturated)"
         ax_c.plot(g[step // 2::step], diff[step // 2::step],
                   color=TRANSMISSION[T], lw=1.0, label=lab)
         if ok_fit:

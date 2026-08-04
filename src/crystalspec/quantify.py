@@ -216,6 +216,9 @@ DIAGNOSTIC_NM = (310.0, 328.0, 400.0, 412.0, 480.0, 580.0)
 # rather than as a fitted value, so the bound is deliberately far outside any
 # dose reached here.
 D1_BOUND_MGY = 200.0
+# Minimum fraction of the modelled decay that must fall inside the measured
+# dose range for d1 (and any D90 derived from it) to count as determined.
+DECAY_OBSERVED_MIN = 0.5
 
 
 def diagnostic_trace(result, wavelength_nm, half_width=4.0,
@@ -279,6 +282,7 @@ def fit_single_exponential(dose_MGy, delta_a, falling_segment_only=True):
     y = np.asarray(delta_a, dtype=float)
     good = np.isfinite(D) & np.isfinite(y)
     out = {"d1_MGy": np.nan, "D90_MGy": np.nan, "R2_single": np.nan,
+           "decay_observed_frac": np.nan,
            "dA_total": np.nan, "d1_at_bound": False, "D90_is_lower_bound": False,
            "dA_extremum": np.nan, "dose_at_extremum_MGy": np.nan,
            "recovery_frac": np.nan, "n_frames_fitted": 0,
@@ -328,7 +332,20 @@ def fit_single_exponential(dose_MGy, delta_a, falling_segment_only=True):
         return out
     reached = np.nonzero(np.abs(pred - pred[0]) >= 0.9 * abs(total))[0]
     out["D90_MGy"] = float(D[reached[0]]) if reached.size else float(D[-1])
-    out["D90_is_lower_bound"] = bool(out["D90_MGy"] >= 0.9 * float(D[-1]))
+
+    # How much of the decay the model postulates was actually traversed by the
+    # measurement.  This is the diagnostic that matters, and it is not visible
+    # in R^2: a trace can be fitted with R^2 near 0.99 by the early, nearly
+    # linear part of an exponential whose time constant is far outside the
+    # measured range, in which case d1 is unidentifiable and every quantity
+    # derived from it is an extrapolation.  At 100 % transmission the fit
+    # observes 0.14 of its own modelled decay and d1 lands anywhere between
+    # 0.16 and 200 MGy across position bootstrap resamples; at the other three
+    # settings the figure is 0.996 or better.
+    out["decay_observed_frac"] = float(1.0 - np.exp(-float(D[-1]) / d1))
+    out["D90_is_lower_bound"] = bool(
+        out["D90_MGy"] >= 0.9 * float(D[-1])
+        or out["decay_observed_frac"] < DECAY_OBSERVED_MIN)
     return out
 
 
@@ -398,6 +415,7 @@ def table_exponential_fits(results, pairs=None, half_width=4.0):
                 "D90_MGy": round(f["D90_MGy"], 3),
                 "D90_is_lower_bound": f["D90_is_lower_bound"],
                 "R2_single": round(f["R2_single"], 4),
+                "decay_observed_frac": round(f["decay_observed_frac"], 3),
             })
 
     # The label-specific quantity: DTNB minus its matched apo control, on a
@@ -430,6 +448,7 @@ def table_exponential_fits(results, pairs=None, half_width=4.0):
                 "D90_MGy": round(f["D90_MGy"], 3),
                 "D90_is_lower_bound": f["D90_is_lower_bound"],
                 "R2_single": round(f["R2_single"], 4),
+                "decay_observed_frac": round(f["decay_observed_frac"], 3),
             })
     return pd.DataFrame(rows)
 
