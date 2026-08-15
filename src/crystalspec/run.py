@@ -274,7 +274,7 @@ def main(argv=None) -> int:
     budget_rows = budget.to_dict("records")
     figure_v1_signal_is_real(results, PAIRS, registry,
                              out / "figure_V1_signal_is_real.png")
-    figure_v2_verdict(budget_rows, out / "figure_V2_verdict.png")
+    figure_v2_verdict(results, PAIRS, budget_rows, out / "figure_V2_verdict.png")
     figure_v3_what_else_changes(results, PAIRS,
                                 out / "figure_V3_what_else_changes.png")
     table_viability(results, PAIRS, budget_rows, out / "table_V1_viability.csv")

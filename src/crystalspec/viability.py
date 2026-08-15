@@ -184,70 +184,84 @@ def figure_v1_signal_is_real(results, pairs, registry, out_path, t_max_s=20.0):
     return fig
 
 
-def figure_v2_verdict(budget_rows, out_path):
-    """V2: detection dose against published diffraction lifetime.
+def figure_v2_verdict(results, pairs, budget_rows, out_path, dose_max_MGy=0.4):
+    """V2: dose against the label signal, with the detection threshold marked.
 
-    ``budget_rows`` is ``table_10_dose_budget.csv`` as a list of dicts.  Each
-    condition contributes one detection dose and is compared against every
-    published room-temperature lifetime, giving a range rather than a point --
-    the lifetime depends on the protein and on how the dose is delivered, so a
-    single value would be false precision.
+    This plots the quantity a reader actually wants to see -- how big is the
+    change, at what dose, relative to the noise -- rather than a derived
+    ratio.  ``budget_rows`` supplies the pre-computed detection dose and
+    published lifetimes so the two panels cannot drift from table 10.
 
-    A point below the diagonal means the label change clears the measured
-    baseline floor before the crystal loses its diffraction.
+    Panel a: |label signal| (the DTNB-apo difference at 412 nm) against dose,
+    one curve per transmission, with the measured noise floor shaded and each
+    curve's detection dose marked where it crosses that floor.  The vertical
+    band is the published room-temperature diffraction-lifetime range
+    (Owen et al. 2012); a detection mark to the LEFT of the band means the
+    label change is measurable before a comparable crystal stops diffracting.
+
+    Panel b: the same detection dose against dose rate, so the trend -- slower
+    delivery detects at lower dose -- is visible directly rather than folded
+    into a ratio.  The same lifetime band is repeated on the y-axis.
     """
     import matplotlib.pyplot as plt
 
     apply_style()
-    fig, (axa, axb) = plt.subplots(1, 2, figsize=(7.0, 3.0))
+    fig, (axa, axb) = plt.subplots(1, 2, figsize=(7.2, 3.1))
 
     by_cond = {}
     for r in budget_rows:
         by_cond.setdefault(r["condition"], []).append(r)
-
     lo_life = min(float(r["diffraction_lifetime_MGy"]) for r in budget_rows)
     hi_life = max(float(r["diffraction_lifetime_MGy"]) for r in budget_rows)
 
-    for cond, rows in by_cond.items():
-        t_pct = int(cond.split("_")[1])
-        det = float(rows[0]["dose_to_clear_noise_MGy"])
-        lives = sorted(float(r["diffraction_lifetime_MGy"]) for r in rows)
-        axa.plot([lives[0], lives[-1]], [det, det], lw=0.8, alpha=0.45,
-                 color=TRANSMISSION[t_pct], solid_capstyle="butt")
-        axa.plot(lives, [det] * len(lives), "o", ms=2.6,
-                 color=TRANSMISSION[t_pct])
-        axa.annotate(f"{t_pct} %", (lives[-1], det), xytext=(4, 0),
-                     textcoords="offset points", ha="left", va="center",
-                     fontsize=6, color=TRANSMISSION[t_pct])
-    lim = [0.0, max(hi_life, max(float(r["dose_to_clear_noise_MGy"])
-                                 for r in budget_rows)) * 1.28]
-    axa.plot(lim, lim, color=META_GREY, lw=0.8, ls="--")
-    axa.annotate("detectable before\nthe crystal dies", (lim[1] * 0.62, lim[1] * 0.30),
-                 fontsize=6, color="0.35", ha="center", va="center")
-    axa.set_xlim(*lim)
-    axa.set_ylim(0, lim[1] * 0.85)
-    axa.set_xlabel("Published RT diffraction lifetime (MGy)")
-    axa.set_ylabel("Dose to detect the label change (MGy)")
+    axa.axvspan(lo_life, hi_life, color=META_GREY, alpha=0.18, lw=0)
+    axa.annotate("published RT\ncrystal lifetime", (0.5 * (lo_life + hi_life), 0.030),
+                 ha="center", va="top", fontsize=6, color="0.35")
+    axa.axhspan(0, NOISE_FLOOR_DA, color=META_GREY, alpha=0.30, lw=0)
+    axa.annotate("baseline noise", (dose_max_MGy * 0.98, NOISE_FLOOR_DA),
+                 xytext=(0, 2), textcoords="offset points", ha="right",
+                 va="bottom", fontsize=6, color="0.35")
 
-    # Panel b: the same thing as the ratio, which is what a proposal quotes.
+    for dkey, akey in pairs:
+        t_pct = int(dkey.split("_")[1])
+        _, _, lab = _difference(results, dkey, akey, *TNB_WINDOW_NM)
+        d, _, _ = _difference(results, dkey, akey, *TNB_WINDOW_NM)
+        m = d <= dose_max_MGy
+        y = np.abs(lab[m])
+        axa.plot(d[m], y, lw=1.3, color=TRANSMISSION[t_pct], label=f"{t_pct} %")
+        det = float(by_cond[dkey][0]["dose_to_clear_noise_MGy"])
+        axa.plot([det], [NOISE_FLOOR_DA], "o", ms=3.6, color=TRANSMISSION[t_pct],
+                 zorder=5)
+    axa.set_xlim(0, dose_max_MGy)
+    axa.set_ylim(0, 0.032)
+    axa.set_xlabel("Absorbed dose (MGy)")
+    axa.set_ylabel("Label signal, $|\\Delta A|$ at 412 nm")
+    axa.legend(loc="center right", frameon=False, handlelength=1.6,
+               labelspacing=0.22, borderpad=0.3, fontsize=6)
+
+    # Panel b: detection dose against dose rate -- the design curve.  Slower
+    # delivery detects the label change at lower dose, which is the
+    # counter-intuitive result worth showing on its own axis.
+    axb.axhspan(lo_life, hi_life, color=META_GREY, alpha=0.18, lw=0)
+    axb.annotate("published RT\ncrystal lifetime", (0.06, hi_life), xytext=(0, 2),
+                 textcoords="offset points", ha="left", va="bottom",
+                 fontsize=6, color="0.35")
     for cond, rows in by_cond.items():
         t_pct = int(cond.split("_")[1])
-        ratios = [float(r["detection_dose_over_lifetime"]) for r in rows]
         rate = float(rows[0]["dose_rate_MGy_per_s"])
-        axb.plot([rate, rate], [min(ratios), max(ratios)], lw=1.1,
-                 color=TRANSMISSION[t_pct], solid_capstyle="butt")
-        axb.plot([rate], [np.median(ratios)], "o", ms=3.6,
-                 color=TRANSMISSION[t_pct])
-        axb.annotate(f"{t_pct} %", (rate, max(ratios)), xytext=(0, 4),
+        det = float(rows[0]["dose_to_clear_noise_MGy"])
+        axb.plot([rate], [det], "o", ms=4.2, color=TRANSMISSION[t_pct])
+        axb.annotate(f"{t_pct} %", (rate, det), xytext=(0, 5),
                      textcoords="offset points", ha="center", va="bottom",
                      fontsize=6, color=TRANSMISSION[t_pct])
-    axb.axhline(1.0, color=META_GREY, lw=0.8)
-    axb.annotate("viable on a single crystal below 1", (0.055, 0.93), xytext=(0, 0),
-                 textcoords="offset points", fontsize=6, color="0.35",
-                 ha="left", va="top")
+    rates = sorted(float(by_cond[c][0]["dose_rate_MGy_per_s"]) for c in by_cond)
+    dets = [float(by_cond[c][0]["dose_to_clear_noise_MGy"]) for c in
+            sorted(by_cond, key=lambda k: float(by_cond[k][0]["dose_rate_MGy_per_s"]))]
+    axb.plot(rates, dets, lw=0.8, color=META_GREY, ls=":", zorder=0)
     axb.set_xscale("log")
+    axb.set_ylim(0, hi_life * 1.15)
     axb.set_xlabel("Dose rate (MGy s$^{-1}$)")
-    axb.set_ylabel("Detection dose / crystal lifetime")
+    axb.set_ylabel("Dose to detect the label change (MGy)")
 
     for ax, letter in ((axa, "a"), (axb, "b")):
         panel_label(ax, letter)

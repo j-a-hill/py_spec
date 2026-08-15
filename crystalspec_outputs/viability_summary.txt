@@ -31,10 +31,21 @@ THE THREE THINGS THAT HAD TO BE TRUE
 
 2. IT IS DETECTABLE INSIDE A CRYSTAL'S LIFETIME         [figure V2]
 
-   The number that matters is the dose needed for the label change to clear
-   the measured baseline noise, compared against how much dose a
-   room-temperature crystal survives.  Published RT diffraction lifetimes for
-   comparable systems span 0.10 to 0.37 MGy (Owen et al. 2012).
+   Figure V2 plots the quantity that matters directly: the label signal
+   against dose (panel a), with the measured baseline noise shaded and each
+   condition's detection dose marked where its curve crosses that noise.  A
+   second shaded band marks the published room-temperature diffraction
+   lifetime range, 0.10 to 0.37 MGy (Owen et al. 2012).  A detection mark to
+   the LEFT of that band means the label change is measurable before a
+   comparable crystal stops diffracting; a mark INSIDE it is ambiguous,
+   depending on which published lifetime is the right comparison.
+
+   No half-life or single decay constant is fitted for this comparison.  A
+   fitted decay constant on these traces is window-dependent -- it changes
+   1.4 to 2.5x depending on how much of the curve the fit is given, because
+   the decay is not a single exponential (see the note on kinetics below).
+   Reading the dose axis directly, against a fixed noise floor, avoids that
+   problem entirely: no exponential is fitted to make this comparison.
 
    transmission   dose rate     detection dose   fraction of crystal lifetime
       5 %        0.052 MGy/s    0.025 MGy      0.07 - 0.25   VIABLE
@@ -47,10 +58,11 @@ THE THREE THINGS THAT HAD TO BE TRUE
    published lifetime.  Only full beam is not, and there the fix is averaging
    over several crystals rather than a different technique.
 
-   The trend is the useful part: SLOWER delivery is better.  Detection dose
-   rises 9.7-fold from 5 % to 100 % transmission (0.025 to 0.243 MGy)
-   for a 20-fold increase in dose rate, because faster irradiation destroys
-   the label before enough spectra accumulate.
+   The trend is the useful part, and panel b of figure V2 plots it directly:
+   SLOWER delivery is better.  Detection dose rises 9.7-fold from 5 % to
+   100 % transmission (0.025 to 0.243 MGy) for a 20-fold increase in dose
+   rate, because faster irradiation destroys the label before enough spectra
+   accumulate.
 
    The six lifetimes used above are all from Owen et al. 2012
    (doi:10.1107/s0907444912012553, "Outrunning free radicals in
@@ -104,6 +116,30 @@ WHAT THIS DOES NOT SUPPORT SAYING
   * Nothing about the RT multicrystal geometry as a spectroscopy platform.
     These are thin films, not the single large crystals online spectroscopy
     would need.
+
+--------------------------------------------------------------------------
+
+
+--------------------------------------------------------------------------
+WHY NOT A HALF-LIFE?
+--------------------------------------------------------------------------
+
+Half-life and the fitted decay constant d1 are the same quantity in different
+units (t_half = ln(2) * d1), so the reason one cannot be quoted is the reason
+the other cannot either: d1 is not stable against how much of the curve is
+used to fit it.  Truncating the DTNB-25 difference trace at 0.6, 1.0, 1.5, 2.0
+and 3.0 MGy gives d1 = 0.25, 0.38, 0.61, 0.85 and 1.11 MGy -- a 4.4-fold
+spread for the same underlying data, because the decay has a fast initial
+component and a slower one that only shows up once enough dose has been
+given.  The full-range fit (4.68 MGy) is larger again.  A single half-life
+quoted from any one of these would misrepresent how fast the change actually
+happens at low dose, which is the regime a real experiment would run in.
+
+What is robust, and used throughout this document instead: the detection
+dose (where a curve first clears the measured noise floor) and the initial
+slope (rate of change per MGy, fitted only inside a 0-1 MGy window).  Both
+are read directly from the data without assuming a functional form for the
+whole decay.
 
 --------------------------------------------------------------------------
 HOW TO REGENERATE
