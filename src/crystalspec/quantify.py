@@ -281,9 +281,11 @@ def fit_single_exponential(dose_MGy, delta_a, falling_segment_only=True):
     D = np.asarray(dose_MGy, dtype=float)
     y = np.asarray(delta_a, dtype=float)
     good = np.isfinite(D) & np.isfinite(y)
-    out = {"d1_MGy": np.nan, "D90_MGy": np.nan, "R2_single": np.nan,
+    out = {"d1_MGy": np.nan, "D90_MGy": np.nan, "D50_MGy": np.nan,
+           "R2_single": np.nan,
            "decay_observed_frac": np.nan,
            "dA_total": np.nan, "d1_at_bound": False, "D90_is_lower_bound": False,
+           "D50_is_lower_bound": False,
            "dA_extremum": np.nan, "dose_at_extremum_MGy": np.nan,
            "recovery_frac": np.nan, "n_frames_fitted": 0,
            "n_frames": int(good.sum())}
@@ -333,6 +335,18 @@ def fit_single_exponential(dose_MGy, delta_a, falling_segment_only=True):
     reached = np.nonzero(np.abs(pred - pred[0]) >= 0.9 * abs(total))[0]
     out["D90_MGy"] = float(D[reached[0]]) if reached.size else float(D[-1])
 
+    # D50 (half-dose), by the SAME empirical, measured-range definition as
+    # D90 above -- the dose at which the fitted curve first attains 50 % of
+    # its measured excursion, not D90 / 2.  For a single exponential the two
+    # are related by a FIXED ratio, D50 = D90 * ln(2)/ln(10) = D90 * 0.301,
+    # because the curve is exponential rather than linear in dose; halving
+    # D90 would overstate D50 by roughly 3x on this data.  D50 is computed
+    # from the same measured-range crossing (not the ratio) so it inherits
+    # exactly the same lower-bound behaviour as D90 when the fit has not
+    # observed enough of the curve.
+    reached50 = np.nonzero(np.abs(pred - pred[0]) >= 0.5 * abs(total))[0]
+    out["D50_MGy"] = float(D[reached50[0]]) if reached50.size else float(D[-1])
+
     # How much of the decay the model postulates was actually traversed by the
     # measurement.  This is the diagnostic that matters, and it is not visible
     # in R^2: a trace can be fitted with R^2 near 0.99 by the early, nearly
@@ -345,6 +359,12 @@ def fit_single_exponential(dose_MGy, delta_a, falling_segment_only=True):
     out["decay_observed_frac"] = float(1.0 - np.exp(-float(D[-1]) / d1))
     out["D90_is_lower_bound"] = bool(
         out["D90_MGy"] >= 0.9 * float(D[-1])
+        or out["decay_observed_frac"] < DECAY_OBSERVED_MIN)
+    # D50 needs less of the curve to be identified than D90 does (it is
+    # reached earlier), but it still inherits the same overall
+    # non-identifiability when the fit itself is unconstrained.
+    out["D50_is_lower_bound"] = bool(
+        out["D50_MGy"] >= 0.9 * float(D[-1])
         or out["decay_observed_frac"] < DECAY_OBSERVED_MIN)
     return out
 
@@ -387,7 +407,7 @@ def table_diagnostic_wavelengths(results, pairs, half_width=4.0):
 
 
 def table_exponential_fits(results, pairs=None, half_width=4.0):
-    """Single-exponential fit and D90 at each diagnostic wavelength."""
+    """Single-exponential fit and D90/D50 at each diagnostic wavelength."""
     import pandas as pd
 
     import numpy as np
@@ -414,6 +434,8 @@ def table_exponential_fits(results, pairs=None, half_width=4.0):
                 "d1_at_bound": f["d1_at_bound"],
                 "D90_MGy": round(f["D90_MGy"], 3),
                 "D90_is_lower_bound": f["D90_is_lower_bound"],
+                "D50_MGy": round(f["D50_MGy"], 3),
+                "D50_is_lower_bound": f["D50_is_lower_bound"],
                 "R2_single": round(f["R2_single"], 4),
                 "decay_observed_frac": round(f["decay_observed_frac"], 3),
             })
@@ -447,6 +469,8 @@ def table_exponential_fits(results, pairs=None, half_width=4.0):
                 "d1_at_bound": f["d1_at_bound"],
                 "D90_MGy": round(f["D90_MGy"], 3),
                 "D90_is_lower_bound": f["D90_is_lower_bound"],
+                "D50_MGy": round(f["D50_MGy"], 3),
+                "D50_is_lower_bound": f["D50_is_lower_bound"],
                 "R2_single": round(f["R2_single"], 4),
                 "decay_observed_frac": round(f["decay_observed_frac"], 3),
             })

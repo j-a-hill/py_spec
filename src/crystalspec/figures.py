@@ -1407,10 +1407,11 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
                   and not fit["D90_is_lower_bound"])
         lab = f"{T}%"
         if ok_fit:
-            lab = (f"{T}%, $D_{{90}}$ {fit['D90_MGy']:.1f} MGy"
-                   f" ($R^2$ {fit['R2_single']:.2f})")
+            lab = (f"{T}%, $D_{{50/90}}$ {fit['D50_MGy']:.1f}/"
+                   f"{fit['D90_MGy']:.1f} MGy ($R^2$ {fit['R2_single']:.2f})")
         elif np.isfinite(fit["D90_MGy"]):
-            lab = f"{T}%, $D_{{90}}$ > {fit['D90_MGy']:.1f} MGy (not saturated)"
+            lab = (f"{T}%, $D_{{50/90}}$ > {fit['D50_MGy']:.1f}/"
+                   f"{fit['D90_MGy']:.1f} MGy (not saturated)")
         ax_c.plot(g[step // 2::step], diff[step // 2::step],
                   color=TRANSMISSION[T], lw=1.0, label=lab)
         if ok_fit:

@@ -209,19 +209,36 @@ neighbourhood here.
 
 What the radiation-damage literature actually reports for this kind of
 dose-response curve is not an instantaneous rate but a SATURATION dose -- a
-D1/2 or D90, the dose at which the change has covered a fixed fraction of the
-total change it is going to make -- and that quantity does not have the
-problem above, because it is read off a single point on the curve rather than
-averaged over an arbitrary neighbourhood.  This project already has exactly
-that: quantify.fit_single_exponential fits A = A0 + B*exp(-D/d1) to each
-difference trace and reports D90 (defined against the measured range, not
-extrapolated), with a decay_observed_frac diagnostic that correctly catches
-non-identifiability rather than hiding it -- at 100 % T the fit only observes
-14 % of its own modelled decay, and D90 there is correctly flagged as a lower
-bound (>1.9 MGy) rather than reported as a bare number.  This is table 9 and
-is already plotted in figure 2 panel C; it is the answer to "extract a rate"
-that this project settled on before the four attempts above, and nothing in
-this document supersedes it.
+D1/2 (Weik, de la Mora et al.) or D90 (following Sutton et al. 2013, cited
+in quantify.fit_single_exponential), the dose at which the change has
+covered a fixed fraction of the total change it is going to make -- and
+that quantity does not have the problem above, because it is read off a
+single point on the curve rather than averaged over an arbitrary
+neighbourhood.  This project already has exactly that:
+quantify.fit_single_exponential fits A = A0 + B*exp(-D/d1) to each
+difference trace and reports BOTH D50 and D90 (each defined against the
+measured range, not extrapolated), with a decay_observed_frac diagnostic
+that correctly catches non-identifiability rather than hiding it -- at
+100 % T the fit only observes 14 % of its own modelled decay, and both D50
+and D90 there are correctly flagged as lower bounds (>1.0 and >1.9 MGy)
+rather than reported as bare numbers.
+
+D50 is NOT D90 / 2.  For this exponential model, D50 = D90 * ln(2)/ln(10) =
+D90 * 0.301, because the curve is exponential in dose rather than linear --
+it covers a disproportionate share of its own total change early.  Verified
+on the three saturating conditions here: D50/D90 = 0.517/1.698 = 0.304 at
+5 % T, 2.883/9.506 = 0.303 at 25 % T, 0.245/0.804 = 0.305 at 50 % T, all
+within rounding of the theoretical 0.301.  This ratio applies only when the
+fit is identified; at 100 % T, where it is not, D50 is computed the same
+way D90 is -- as a measured-range crossing, not from the ratio or the raw
+d1 -- so it degrades to the same kind of lower bound rather than to a
+formula-derived number that would extrapolate past the 2.08 MGy actually
+collected.
+
+Both are table 9 and are now plotted together in figure 2 panel C
+(labelled D50/90); this is the answer to "extract a rate" that this
+project settled on before the four attempts above, and nothing in this
+document supersedes it.
 
 What is robust, and used throughout the REST of this document (the viability
 figures and dose-budget table, which are about detectability rather than
