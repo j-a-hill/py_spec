@@ -154,6 +154,23 @@ case that does NOT hit a bound.  Two free rates are not more identifiable
 from these traces than one; they are less.  Neither is reported as a rate
 constant for that reason.
 
+A THIRD attempt, tried in response to a direct request: fit ONLY the fast
+part of a two-component decay, on the reasoning that it's the physiologically
+relevant one anyway.  This looked promising at first -- the fast time
+constant from a biexponential fit held roughly stable (0.069-0.104 MGy for
+DTNB_5/25/50) across small windows from 0.5 to 0.8 MGy, in contrast to the
+single exponential's d1, which never stabilised.  But the apparent stability
+is an artefact of fit degeneracy, not a real fast component: the SLOW time
+constant (d2) is pinned to its own lower bound (0.50 MGy, the smallest value
+the fit was allowed) at every one of those "stable" windows.  The fit isn't
+resolving two timescales -- it's using the second exponential purely as
+extra curve-fitting flexibility, and reports whatever d1 falls out once d2
+is pushed against its floor.  d1 only starts moving once the window is large
+enough that d2 escapes its bound (from ~1.0-1.2 MGy on), at which point d1
+is exactly as window-dependent as it was as a single exponential (see the
+table above).  There is no window in which "the fast part" is both fitted to
+enough points to be a real fit AND free of this degeneracy.
+
 What is robust, and used throughout this document instead: the detection
 dose (where a curve first clears the measured noise floor) and the initial
 slope (rate of change per MGy, fitted only inside a 0-1 MGy window).  Both
