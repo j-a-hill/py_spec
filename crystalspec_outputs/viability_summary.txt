@@ -172,11 +172,56 @@ is exactly as window-dependent as it was as a single exponential (see the
 table above).  There is no window in which "the fast part" is both fitted to
 enough points to be a real fit AND free of this degeneracy.
 
-What is robust, and used throughout this document instead: the detection
-dose (where a curve first clears the measured noise floor) and the initial
-slope (rate of change per MGy, fitted only inside a 0-1 MGy window).  Both
-are read directly from the data without assuming a functional form for the
-whole decay.
+A FOURTH attempt, also tried in response to a direct request: fit a straight
+line instead of an exponential, on the reasoning that a curve does not need a
+half-life at all.  Made no difference -- the same instability shows up in the
+FITTED SLOPE.  Restricting a linear fit to increasing windows (0.1, 0.3, 0.5,
+1.0, 2.0 MGy) at DTNB_25 gives slope -0.062, -0.030, -0.022, -0.013, -0.009
+per MGy -- a 7-fold spread, worse at 5 % T (15-fold) -- because the trace is
+genuinely concave (fast fall, then shallower) and any straight line only ever
+reports the average steepness of the stretch it was fitted to.  Fitting a
+polynomial instead of a line does not fix this either, for the same reason
+with the roles reversed: at a FIXED 1.0 MGy window, the fitted derivative at
+dose = 0 goes from -0.013 (degree 1) to -0.119 (degree 10) as the polynomial
+degree rises, with no sign of settling, even though every one of those fits
+lies visually on top of the data (R2 > 0.98 from degree 3 up).  A
+non-parametric local derivative (Savitzky-Golay) fails the same way from a
+third direction: too small a smoothing window and the derivative is dominated
+by frame-to-frame measurement noise; too large a window and it blends in the
+later, shallower part of the curve, exactly reproducing the linear-fit
+problem.  No smoothing window between those extremes gives a stable plateau,
+for any condition.
+
+The common cause, stated plainly: "the initial rate" is not a single number
+this data supports, under ANY of the four methods above, because it requires
+choosing how much of a noisy, genuinely-curved trace counts as "initial" --
+and every reasonable choice of that scale (fit window, model order, smoothing
+window) gives a materially different answer.  This is not a shortcoming of
+any one fitting method; a derivative at a point is inherently a statement
+about a neighbourhood, and there is no data-determined size for that
+neighbourhood here.
+
+What the radiation-damage literature actually reports for this kind of
+dose-response curve is not an instantaneous rate but a SATURATION dose -- a
+D1/2 or D90, the dose at which the change has covered a fixed fraction of the
+total change it is going to make -- and that quantity does not have the
+problem above, because it is read off a single point on the curve rather than
+averaged over an arbitrary neighbourhood.  This project already has exactly
+that: quantify.fit_single_exponential fits A = A0 + B*exp(-D/d1) to each
+difference trace and reports D90 (defined against the measured range, not
+extrapolated), with a decay_observed_frac diagnostic that correctly catches
+non-identifiability rather than hiding it -- at 100 % T the fit only observes
+14 % of its own modelled decay, and D90 there is correctly flagged as a lower
+bound (>1.9 MGy) rather than reported as a bare number.  This is table 9 and
+is already plotted in figure 2 panel C; it is the answer to "extract a rate"
+that this project settled on before the four attempts above, and nothing in
+this document supersedes it.
+
+What is robust, and used throughout the REST of this document (the viability
+figures and dose-budget table, which are about detectability rather than
+about fitting the decay's shape): the detection dose, where a curve first
+clears the measured noise floor.  It is a single crossing point, not an
+average over a window, so it shares D90's immunity to this problem.
 
 --------------------------------------------------------------------------
 HOW TO REGENERATE
