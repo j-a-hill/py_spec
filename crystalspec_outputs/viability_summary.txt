@@ -31,14 +31,18 @@ THE THREE THINGS THAT HAD TO BE TRUE
 
 2. IT IS DETECTABLE INSIDE A CRYSTAL'S LIFETIME         [figure V2]
 
-   Figure V2 plots the quantity that matters directly: the label signal
-   against dose (panel a), with the measured baseline noise shaded and each
-   condition's detection dose marked where its curve crosses that noise.  A
-   second shaded band marks the published room-temperature diffraction
-   lifetime range, 0.10 to 0.37 MGy (Owen et al. 2012).  A detection mark to
-   the LEFT of that band means the label change is measurable before a
-   comparable crystal stops diffracting; a mark INSIDE it is ambiguous,
-   depending on which published lifetime is the right comparison.
+   Figure V2 plots the quantity that matters directly: the SIGNED label
+   signal against dose (panel a) -- it falls, because the label is lost, and
+   is plotted falling rather than as |dA| so the direction on the page
+   matches the chemistry.  A dashed threshold line marks the detection level
+   (the noise floor), each curve's own detection dose is marked where it
+   crosses that line, and each curve is labelled with the total change it
+   reaches by 0.4 MGy.  Panel b compares that detection dose against the
+   published room-temperature diffraction lifetime range, 0.10 to 0.37 MGy
+   (Owen et al. 2012): three of four conditions (5, 25, 50 % T) detect at 0.07-0.90 of the range
+   of published lifetimes; the fourth (100 % T) detects at 0.65-2.50 of that
+   range, i.e. it needs MORE dose than the crystal survives for four of the
+   six published lifetimes, and less for only two.
 
    No half-life or single decay constant is fitted for this comparison.  A
    fitted decay constant on these traces is window-dependent -- it changes
@@ -134,6 +138,18 @@ component and a slower one that only shows up once enough dose has been
 given.  The full-range fit (4.68 MGy) is larger again.  A single half-life
 quoted from any one of these would misrepresent how fast the change actually
 happens at low dose, which is the regime a real experiment would run in.
+
+A two-component (biexponential) fit was tried as well, since a fast-plus-slow
+decay is what the window-dependence above implies.  Fitted over the full
+dose range it does fit better (R2 0.92-1.00 against 0.59-0.95 for one
+exponential -- the single exponential does particularly badly on DTNB_50,
+R2 0.59), but the two rate constants it returns are LESS stable across
+windows than the single rate was: for DTNB_25, the fast time constant spans
+0.044 to 0.994 MGy between a 0.6 and a 3.0 MGy fit window, and for the two
+highest dose rates (50 % and 100 % T) at least one of the two rates pins to
+its fit bound at every window from 1 MGy up. Two free rates are not more
+identifiable from these traces than one; they are less. Neither is reported
+as a rate constant for that reason.
 
 What is robust, and used throughout this document instead: the detection
 dose (where a curve first clears the measured noise floor) and the initial

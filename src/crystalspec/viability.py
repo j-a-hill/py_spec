@@ -192,16 +192,18 @@ def figure_v2_verdict(results, pairs, budget_rows, out_path, dose_max_MGy=0.4):
     ratio.  ``budget_rows`` supplies the pre-computed detection dose and
     published lifetimes so the two panels cannot drift from table 10.
 
-    Panel a: |label signal| (the DTNB-apo difference at 412 nm) against dose,
-    one curve per transmission, with the measured noise floor shaded and each
-    curve's detection dose marked where it crosses that floor.  The vertical
-    band is the published room-temperature diffraction-lifetime range
-    (Owen et al. 2012); a detection mark to the LEFT of the band means the
-    label change is measurable before a comparable crystal stops diffracting.
+    Panel a: the SIGNED label signal (the DTNB-apo difference at 412 nm)
+    against dose.  It is plotted signed, not as |dA|, because the label is
+    LOST under irradiation -- the trace falls, and taking an absolute value
+    turns that fall into what reads as a rise.  A thin dashed line marks the
+    detection threshold (the noise floor, negated so it sits on the same
+    signed axis); each curve is labelled at its own endpoint with the total
+    change reached by dose_max_MGy, so the number the annotation asked for is
+    on the plot rather than left to be read off the axis.
 
-    Panel b: the same detection dose against dose rate, so the trend -- slower
-    delivery detects at lower dose -- is visible directly rather than folded
-    into a ratio.  The same lifetime band is repeated on the y-axis.
+    Panel b: detection dose against dose rate, with the published RT
+    diffraction-lifetime range shaded so the design trend -- slower delivery
+    detects at a lower dose -- is visible without a derived ratio.
     """
     import matplotlib.pyplot as plt
 
@@ -214,30 +216,41 @@ def figure_v2_verdict(results, pairs, budget_rows, out_path, dose_max_MGy=0.4):
     lo_life = min(float(r["diffraction_lifetime_MGy"]) for r in budget_rows)
     hi_life = max(float(r["diffraction_lifetime_MGy"]) for r in budget_rows)
 
-    axa.axvspan(lo_life, hi_life, color=META_GREY, alpha=0.18, lw=0)
-    axa.annotate("published RT\ncrystal lifetime", (0.5 * (lo_life + hi_life), 0.030),
-                 ha="center", va="top", fontsize=6, color="0.35")
-    axa.axhspan(0, NOISE_FLOOR_DA, color=META_GREY, alpha=0.30, lw=0)
-    axa.annotate("baseline noise", (dose_max_MGy * 0.98, NOISE_FLOOR_DA),
-                 xytext=(0, 2), textcoords="offset points", ha="right",
+    # Detection threshold as a single line, not a shaded band: the signal is
+    # signed and always negative here, so "detected" means the curve has
+    # crossed BELOW -NOISE_FLOOR_DA, not fallen inside a shaded region.
+    axa.axhline(-NOISE_FLOOR_DA, color=META_GREY, lw=0.9, ls="--")
+    axa.annotate("detection threshold", (dose_max_MGy * 0.98, -NOISE_FLOOR_DA),
+                 xytext=(0, 3), textcoords="offset points", ha="right",
                  va="bottom", fontsize=6, color="0.35")
+    axa.axhline(0, color=META_GREY, lw=0.5)
 
+    endpoints = []
     for dkey, akey in pairs:
         t_pct = int(dkey.split("_")[1])
-        _, _, lab = _difference(results, dkey, akey, *TNB_WINDOW_NM)
-        d, _, _ = _difference(results, dkey, akey, *TNB_WINDOW_NM)
+        d, _, lab = _difference(results, dkey, akey, *TNB_WINDOW_NM)
         m = d <= dose_max_MGy
-        y = np.abs(lab[m])
-        axa.plot(d[m], y, lw=1.3, color=TRANSMISSION[t_pct], label=f"{t_pct} %")
+        axa.plot(d[m], lab[m], lw=1.3, color=TRANSMISSION[t_pct])
         det = float(by_cond[dkey][0]["dose_to_clear_noise_MGy"])
-        axa.plot([det], [NOISE_FLOOR_DA], "o", ms=3.6, color=TRANSMISSION[t_pct],
+        axa.plot([det], [-NOISE_FLOOR_DA], "o", ms=3.6, color=TRANSMISSION[t_pct],
                  zorder=5)
-    axa.set_xlim(0, dose_max_MGy)
-    axa.set_ylim(0, 0.032)
+        endpoints.append((t_pct, float(d[m][-1]), float(lab[m][-1])))
+
+    # Endpoint labels: transmission and the total change reached, so the
+    # label-change VALUE is on the figure rather than implied.  50 % and
+    # 100 % converge to nearly the same value, so labels are stacked by
+    # rank rather than placed at the data point, which would overlap.
+    endpoints.sort(key=lambda e: e[2])          # most negative (5 %) first
+    y0 = endpoints[0][2]
+    for i, (t_pct, dx, dy) in enumerate(endpoints):
+        y_label = y0 - 0.0021 * i
+        axa.annotate(f"{t_pct} %, {dy:+.3f}", (dx, y_label), xytext=(4, 0),
+                     textcoords="offset points", ha="left", va="center",
+                     fontsize=6, color=TRANSMISSION[t_pct])
+    axa.set_xlim(0, dose_max_MGy * 1.22)
+    axa.set_ylim(-0.032, 0.003)
     axa.set_xlabel("Absorbed dose (MGy)")
-    axa.set_ylabel("Label signal, $|\\Delta A|$ at 412 nm")
-    axa.legend(loc="center right", frameon=False, handlelength=1.6,
-               labelspacing=0.22, borderpad=0.3, fontsize=6)
+    axa.set_ylabel("Label signal, $\\Delta A$ at 412 nm")
 
     # Panel b: detection dose against dose rate -- the design curve.  Slower
     # delivery detects the label change at lower dose, which is the
