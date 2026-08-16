@@ -144,12 +144,15 @@ decay is what the window-dependence above implies.  Fitted over the full
 dose range it does fit better (R2 0.92-1.00 against 0.59-0.95 for one
 exponential -- the single exponential does particularly badly on DTNB_50,
 R2 0.59), but the two rate constants it returns are LESS stable across
-windows than the single rate was: for DTNB_25, the fast time constant spans
-0.044 to 0.994 MGy between a 0.6 and a 3.0 MGy fit window, and for the two
-highest dose rates (50 % and 100 % T) at least one of the two rates pins to
-its fit bound at every window from 1 MGy up. Two free rates are not more
-identifiable from these traces than one; they are less. Neither is reported
-as a rate constant for that reason.
+windows than the single rate was: for DTNB_25, the fast time constant is
+0.044 MGy fitted to a 1.0 MGy window, 0.112 MGy fitted to a 2.0 MGy window,
+and 0.994 MGy fitted to the full 25 MGy record -- a 22-fold spread across
+just three window choices.  For the two highest dose rates (50 % and 100 %
+T), the fit already pins at least one of the two rates to its bound by the
+2.0 MGy window and at the full range; DTNB_50 at a 1.0 MGy window is the one
+case that does NOT hit a bound.  Two free rates are not more identifiable
+from these traces than one; they are less.  Neither is reported as a rate
+constant for that reason.
 
 What is robust, and used throughout this document instead: the detection
 dose (where a curve first clears the measured noise floor) and the initial
