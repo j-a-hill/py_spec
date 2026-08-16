@@ -1,0 +1,84 @@
+CAPTIONS — crystalspec figures 1-4 (formal deliverable set)
+=============================================================
+
+Figure 1. Absorbance changes in DTNB-soaked and unlabelled (apo) HGD crystals
+track a common protein response and one DTNB-specific label response, both
+dependent on absorbed dose rather than elapsed time. (A, B) Difference spectra
+(relative to the pre-irradiation frame) at five absorbed doses spanning
+0-20 MGy, for DTNB-soaked (A) and apo (B) crystals at 25% transmission. Both
+arms show the same 300-350 nm growth band, present regardless of label,
+increasing monotonically with dose. (C, D) The same two diagnostic
+wavelengths (350 nm, dominated by the shared protein response; 412 nm, the
+DTNB thionitrobenzoate label) plotted against absorbed dose (bottom axis) and
+elapsed time (top axis), mean +/- s.d. over 5 crystal positions. At 350 nm
+(C) DTNB-soaked and apo traces rise together, apo slightly ahead throughout;
+at 412 nm (D) the two arms diverge from the first measured dose -- apo rises
+weakly while DTNB-soaked falls -- consistent with X-ray-driven loss of the
+DTNB label superimposed on a growth process common to both arms. Positions
+were fixed at the largest subset surviving to the longest dose (see Methods)
+to avoid population-composition artefacts as positions drop out; frames
+after optical failure (scattering onset) are excluded.
+
+Figure 2. The 412 nm label-loss trace saturates with a well-defined dose
+scale (D50/D90) at three of four transmission settings; at the highest
+dose rate the same fit is not identified. (A) Difference spectra for
+DTNB-soaked and apo crystals at a representative dose, with the two
+diagnostic wavelengths (328, 412 nm) marked. (B) The DTNB-minus-apo
+difference at six wavelengths spanning the label band and flanking regions,
+against absorbed dose (bottom) and elapsed time (top), 25% transmission.
+(C) The 412 nm difference trace at all four transmission settings (5, 25,
+50, 100%), each with a fitted single-exponential saturation model
+(A = A0 + B*exp(-D/d1); dashed) and the dose to reach 50% and 90% of the
+fitted excursion (D50, D90). At 5, 25 and 50% transmission the fit is
+well-constrained (R^2 0.92-0.99) and D50/D90 scale together as expected for
+this model (D50 = D90 x ln2/ln10 = D90 x 0.301, confirmed to within 1% here).
+At 100% transmission the measured range covers only 14% of the fit's own
+modelled decay (decay_observed_frac); D50 and D90 there are reported as
+lower bounds (>1.0, >1.9 MGy) rather than the unconstrained point estimates
+the same fit would otherwise return.
+
+Figure 3. The DTNB label survives a dose comparable to a room-temperature
+crystal's own diffraction lifetime, with detectability approaching parity
+with that lifetime only at the fastest collection speed tested.
+(A) DTNB-minus-apo difference at 412 nm (mean over the 408-416 nm label
+band) against absorbed dose, all four transmission settings, with a
+published room-temperature crystallographic dose limit (0.257 MGy, matched
+to the slowest collection speed tested) marked for reference. (B) The dose
+at which the label change first clears a fixed detection threshold
+(4x10^-3 absorbance units, an internal-zero noise estimate), divided by the
+published crystal lifetime at a comparable dose rate (lifetime interpolated
+against dose rate per condition, since the inverse dose-rate effect makes
+the reference lifetime itself rate-dependent) -- values at or below 1
+indicate the label change is detectable within one crystal's usable
+lifetime. The grey square series at the 25% point shows the same ratio
+recomputed for averaging over 4 and 25 crystals, illustrating the
+alternative route to detectability at dose rates where a single crystal is
+insufficient.
+
+Figure 4. Room-temperature and cryogenic (100 K) DTNB-soaked crystals show
+the same qualitative difference spectrum, but the room-temperature label
+loss at a matched X-ray exposure exceeds the cryogenic endpoint by
+comparison with the shared protein-growth feature. (A) Difference spectra
+(cryogenic, 100 K) at successive X-ray exposures for three apo and one
+DTNB-soaked crystal, wavelength range spanning both the shared growth band
+(300-350 nm) and the label band (395-430 nm, shaded). (B) The final exposure
+from (A), apo and DTNB-soaked overlaid, showing the same qualitative shape
+as the room-temperature difference spectrum (Fig. 1A-B). (C) The 395-430 nm
+band mean plotted against X-ray exposure number for the cryogenic crystals
+of (A), with the corresponding room-temperature endpoint (same soak
+protocol, single higher-dose exposure) marked as a dotted reference line in
+each arm's own colour. The DTNB-soaked room-temperature endpoint sits
+several-fold below every cryogenic DTNB exposure point, while the apo
+room-temperature endpoint falls within the spread of the cryogenic apo
+series -- consistent with the label response, specifically, being
+suppressed at 100 K relative to room temperature.
+
+Notes on what was moved off the figure canvas (per formal-figures
+convention -- axis/tick labels, panel letters and load-bearing numeric
+values stay on-canvas; narrative interpretation moves here):
+- Fig 3B: the y=1 reference line is no longer labelled in-figure
+  ("feasible on one crystal below here"); its meaning is stated in the
+  caption above.
+- Fig 4C: the dotted reference lines are no longer captioned in-figure
+  ("dotted: room-temperature endpoint, same soak"); they are colour-matched
+  to their own arm (SOAK palette) and explained above instead.

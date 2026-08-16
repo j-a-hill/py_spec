@@ -378,9 +378,9 @@ def figure_cryo(registry, results, out_path, tnb_window=(395.0, 430.0)):
     ax.set_xlabel("X-ray exposure number")
     ax.set_ylabel("ΔA, 395–430 nm")
     ax.set_xticks([1, 2, 3, 4])
-    ax.annotate("dotted: room-temperature\nendpoint, same soak",
-                xy=(0.04, 0.06), xycoords="axes fraction", fontsize=5.5,
-                color="0.35", va="bottom")
+    # Dotted reference lines are colour-matched to the DTNB/apo series they
+    # extend (SOAK palette), so no separate on-canvas key is needed; their
+    # meaning (room-temperature endpoint, same soak) is stated in the caption.
 
     for ax, letter in zip(axes, "abc"):
         panel_label(ax, letter, dx=-0.28)
@@ -1356,7 +1356,7 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
                       fontsize=5.0, color="0.4", va="top")
     ax_a.set_xlabel("Wavelength (nm)")
     ax_a.set_ylabel("\u0394A")
-    ax_a.legend(loc="upper right", fontsize=5.5, framealpha=0.9)
+    ax_a.legend(loc="upper right", fontsize=5.5, framealpha=0.0)
 
     # --- (b) the label-specific difference, and (c) the rate ---
     #
@@ -1380,7 +1380,7 @@ def figure_diagnostic_wavelengths(results, out_path, half_width=4.0,
     rr = results["DTNB_25"]
     vv = rr.valid() & (rr.dose_MGy <= rr.max_valid_dose_MGy())
     twin_time_axis(ax_b, rr.dose_MGy[vv], rr.time_s[vv] - rr.time_s[vv][0])
-    ax_b.legend(loc="lower left", fontsize=5.0, ncol=2, framealpha=0.85,
+    ax_b.legend(loc="lower left", fontsize=5.0, ncol=2, framealpha=0.0,
                 handlelength=1.2, labelspacing=0.25, borderpad=0.3)
 
     # (c) the rate: the label band against dose at every transmission, with the
@@ -2127,9 +2127,12 @@ def figure_experiment_design(results, out_path, tnb_window=(408.0, 416.0),
         ratio = (noise_floor / abs(r["slope"])) / lifetime_at(r["rate"])
         ax_b.plot([r["rate"]], [ratio], "o", color=TRANSMISSION[r["T"]], ms=5.5,
                   zorder=3)
+        # Label in dark grey, not the point's own colour: the two lightest
+        # transmission shades (5, 10%) are below 4.5:1 text contrast on
+        # white and would be illegible at this size.
         ax_b.annotate(f"{r['T']}%", xy=(r["rate"], ratio), xytext=(5, 0),
                       textcoords="offset points", fontsize=5.4,
-                      color=TRANSMISSION[r["T"]], va="center")
+                      color="0.25", va="center")
     best = min(usable, key=lambda r: noise_floor / abs(r["slope"]))
     best_life = lifetime_at(best["rate"])
     n_avg = np.array([1, 4, 25])  # linear y-axis: a 2x range needs no log scale
@@ -2140,13 +2143,18 @@ def figure_experiment_design(results, out_path, tnb_window=(408.0, 416.0),
         ax_b.annotate(f"average {N}", xy=(best["rate"], d), xytext=(5, 0),
                       textcoords="offset points", fontsize=5.0, color="0.4",
                       va="center")
+    # y=1 is the feasibility line (dose to detect / lifetime); left
+    # unlabelled on-canvas per the formal-figure convention -- its meaning
+    # is stated in the caption instead.
     ax_b.axhline(1.0, color="0.3", lw=0.7)
-    ax_b.annotate("feasible on one crystal below here",
-                  xy=(ax_b.get_xlim()[1], 1.0), xytext=(0, -6),
-                  textcoords="offset points", fontsize=5.0, color="0.3",
-                  ha="right", va="top")
-    ax_b.set_xscale("log")
+    # Linear, not log: the plotted dose rates span under a 4x range, and a
+    # log axis there produces dense, overlapping minor-tick labels rather
+    # than a wider view of anything (house convention: log axes are for
+    # >=1-decade ranges).
     ax_b.set_ylim(0, None)
+    xlo, xhi = ax_b.get_xlim()
+    pad = 0.08 * (xhi - xlo)
+    ax_b.set_xlim(xlo - pad, xhi + pad)
     ax_b.set_xlabel("Dose rate (MGy s$^{-1}$)")
     ax_b.set_ylabel("Detection dose /\ncrystal lifetime")
 
