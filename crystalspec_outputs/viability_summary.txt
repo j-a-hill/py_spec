@@ -157,8 +157,9 @@ constant for that reason.
 A THIRD attempt, tried in response to a direct request: fit ONLY the fast
 part of a two-component decay, on the reasoning that it's the physiologically
 relevant one anyway.  This looked promising at first -- the fast time
-constant from a biexponential fit held roughly stable (0.069-0.104 MGy for
-DTNB_5/25/50) across small windows from 0.5 to 0.8 MGy, in contrast to the
+constant from a biexponential fit held roughly stable within each condition
+(DTNB_5 0.069-0.074, DTNB_25 0.038-0.040, DTNB_50 0.091-0.100 MGy) across
+small windows from 0.5 to 0.8 MGy, in contrast to the
 single exponential's d1, which never stabilised.  But the apparent stability
 is an artefact of fit degeneracy, not a real fast component: the SLOW time
 constant (d2) is pinned to its own lower bound (0.50 MGy, the smallest value
