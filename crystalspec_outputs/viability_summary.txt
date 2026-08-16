@@ -186,11 +186,17 @@ dose = 0 goes from -0.013 (degree 1) to -0.119 (degree 10) as the polynomial
 degree rises, with no sign of settling, even though every one of those fits
 lies visually on top of the data (R2 > 0.98 from degree 3 up).  A
 non-parametric local derivative (Savitzky-Golay) fails the same way from a
-third direction: too small a smoothing window and the derivative is dominated
-by frame-to-frame measurement noise; too large a window and it blends in the
-later, shallower part of the curve, exactly reproducing the linear-fit
-problem.  No smoothing window between those extremes gives a stable plateau,
-for any condition.
+third direction, at 5 % and 25 % T where the raw data are dense (~960
+frames): too small a smoothing window and the derivative is dominated by
+frame-to-frame measurement noise (no plateau from 5 to 121 points), too
+large a window and it blends in the later, shallower part of the curve,
+reproducing the linear-fit problem.  At 50 % and 100 % T the derivative
+LOOKS flat across small windows (5-21 points), but this is not a stable
+local rate -- those conditions have only 1-2 raw frames within the dose
+span those windows cover (131 and 30 raw frames total, against ~960 at
+5/25 % T), so the interpolated curve is one straight line there and any
+small window trivially returns its slope.  That is a sampling-density
+artefact, not evidence that a local rate exists to be measured.
 
 The common cause, stated plainly: "the initial rate" is not a single number
 this data supports, under ANY of the four methods above, because it requires
